@@ -1,0 +1,358 @@
+{
+  "industries": {
+    "Aerospace & Defence": {
+      "it": 5.9,
+      "erd": 6.0
+    },
+    "Agriculture": {
+      "it": 2.6,
+      "erd": 5.5
+    },
+    "Automotive": {
+      "it": 6.3,
+      "erd": 2.5
+    },
+    "Business Services / Professional Services": {
+      "it": 2.5,
+      "erd": 3.0
+    },
+    "Construction": {
+      "it": 6.2,
+      "erd": 6.5
+    },
+    "Consumer Products": {
+      "it": 5.7,
+      "erd": 5.0
+    },
+    "Consumer Services": {
+      "it": 7.1,
+      "erd": 3.5
+    },
+    "Ecommerce": {
+      "it": 4.9,
+      "erd": 4.5
+    },
+    "Education": {
+      "it": 4.9,
+      "erd": 4.0
+    },
+    "Energy (Oil & Gas)": {
+      "it": 4.1,
+      "erd": 7.0
+    },
+    "Financial Markets / Capital Markets / Investments": {
+      "it": 11.2,
+      "erd": 2.5
+    },
+    "Healthcare Insurance (Payers)": {
+      "it": 5.2,
+      "erd": 8.0
+    },
+    "Healthcare Providers": {
+      "it": 11.0,
+      "erd": 6.0
+    },
+    "High Tech / Technology": {
+      "it": 5.7,
+      "erd": 4.5
+    },
+    "Hospitality / Travel": {
+      "it": 9.6,
+      "erd": 0
+    },
+    "Industrial Manufacturing \u2013 Discrete": {
+      "it": 4.0,
+      "erd": 0
+    },
+    "Industrial Manufacturing \u2013 Process": {
+      "it": 4.0,
+      "erd": 0
+    },
+    "IT Hardware": {
+      "it": 11.1,
+      "erd": 0
+    },
+    "IT Services": {
+      "it": 23.1,
+      "erd": 0
+    },
+    "Life Insurance": {
+      "it": 5.1,
+      "erd": 0
+    },
+    "Media & Entertainment": {
+      "it": 10.0,
+      "erd": 0
+    },
+    "Medical Devices": {
+      "it": 11.7,
+      "erd": 0
+    },
+    "Mineral / Mining / Natural Resources": {
+      "it": 6.2,
+      "erd": 0
+    },
+    "Non Profit / NGO": {
+      "it": 10.0,
+      "erd": 0
+    },
+    "P&C Insurance": {
+      "it": 3.2,
+      "erd": 0
+    },
+    "Pharmaceuticals / Life Sciences": {
+      "it": 4.0,
+      "erd": 0
+    },
+    "Public Sector & Government": {
+      "it": 5.0,
+      "erd": 0
+    },
+    "Real Estate": {
+      "it": 9.0,
+      "erd": 0
+    },
+    "Reinsurance": {
+      "it": 3.0,
+      "erd": 0
+    },
+    "Retail": {
+      "it": 5.1,
+      "erd": 0
+    },
+    "Retail Banking / Commercial Banking": {
+      "it": 8.0,
+      "erd": 0
+    },
+    "Software": {
+      "it": 5.0,
+      "erd": 0
+    },
+    "Supply Chain / Logistics": {
+      "it": 5.3,
+      "erd": 0
+    },
+    "Telecommunications": {
+      "it": 11.0,
+      "erd": 0
+    },
+    "Transportation": {
+      "it": 7.0,
+      "erd": 0
+    },
+    "Utilities": {
+      "it": 6.6,
+      "erd": 0
+    },
+    "Wholesale / Distribution": {
+      "it": 26.5,
+      "erd": 0
+    }
+  },
+  "lookups": {
+    "region_adj": {
+      "US": 0.0,
+      "EU": -0.05,
+      "APAC": -0.1,
+      "ROW1": -0.05,
+      "ROW2": -0.15
+    },
+    "revenue_adj": {
+      ">$5B": 0.0,
+      "$1B-$5B": 0.03,
+      "$500M-$1B": 0.05,
+      "$100M-$500M": 0.07,
+      "$10M-$100M": 0.1,
+      "<$10M": 0.15
+    }
+  },
+  "countries": {
+    "USA": "US",
+    "Canada": "US",
+    "UK": "EU",
+    "Germany": "EU",
+    "France": "EU",
+    "Italy": "ROW2",
+    "Spain": "EU",
+    "Russia": "APAC",
+    "Japan": "APAC",
+    "Australia": "APAC",
+    "New Zealand": "APAC",
+    "Singapore": "APAC",
+    "China": "APAC",
+    "India": "APAC",
+    "South Korea": "APAC",
+    "Taiwan": "ROW1",
+    "Vietnam": "ROW1",
+    "Thailand": "ROW1",
+    "Philippines": "ROW1",
+    "Malaysia": "ROW1",
+    "Indonesia": "ROW1",
+    "Austria": "ROW1",
+    "Belgium": "ROW1",
+    "Greece": "ROW1",
+    "Switzerland": "ROW1",
+    "Sweden": "ROW1",
+    "Mexico": "ROW2",
+    "Anguilla\u00a0(UK)": "ROW2",
+    "Antigua and Barbuda": "ROW2",
+    "Aruba\u00a0(NL)": "ROW2",
+    "Bahamas": "ROW2",
+    "Barbados": "ROW2",
+    "Bermuda\u00a0(UK)": "ROW2",
+    "British Virgin Islands\u00a0(UK)": "ROW2",
+    "Cayman Islands (UK)": "ROW2",
+    "Cuba": "ROW2",
+    "Cura\u00e7ao\u00a0(NL)": "ROW2",
+    "Dominica": "ROW2",
+    "Dominican Republic": "ROW2",
+    "Grenada": "ROW2",
+    "Guadeloupe\u00a0(FR)": "ROW2",
+    "Haiti": "ROW2",
+    "Jamaica": "ROW2",
+    "Martinique\u00a0(FR)": "ROW2",
+    "Montserrat\u00a0(UK)": "ROW2",
+    "Puerto Rico\u00a0(USA)": "ROW2",
+    "Saint Kitts and Nevis": "ROW2",
+    "Saint Lucia": "ROW2",
+    "Saint Vincent and the Grenadines": "ROW2",
+    "Trinidad and Tobago": "ROW2",
+    "US Virgin Islands\u00a0(USA)": "ROW2",
+    "Belize": "ROW2",
+    "Costa Rica": "ROW2",
+    "El Salvador": "ROW2",
+    "Guatemala": "ROW2",
+    "Honduras": "ROW2",
+    "Nicaragua": "ROW2",
+    "Panama": "ROW2",
+    "Bolivia": "ROW2",
+    "Chile": "ROW2",
+    "Colombia": "ROW2",
+    "Ecuador": "ROW2",
+    "French Guiana\u00a0(FR)": "ROW2",
+    "Guyana": "ROW2",
+    "Paraguay": "ROW2",
+    "Peru": "ROW2",
+    "Suriname": "ROW2",
+    "Uruguay": "ROW2",
+    "Venezuela": "ROW2",
+    "Bulgaria": "ROW2",
+    "Croatia": "ROW2",
+    "Cyprus": "ROW2",
+    "Czech Republic": "ROW2",
+    "Denmark": "ROW2",
+    "Estonia": "ROW2",
+    "Finland": "ROW2",
+    "Hungary": "ROW2",
+    "Ireland": "ROW2",
+    "Latvia": "ROW2",
+    "Lithuania": "ROW2",
+    "Luxembourg": "ROW2",
+    "Malta": "ROW2",
+    "Netherlands": "ROW2",
+    "Poland": "ROW2",
+    "Portugal": "ROW2",
+    "Romania": "ROW2",
+    "Slovakia": "ROW2",
+    "Slovenia": "ROW2",
+    "Ukraine": "ROW2",
+    "Afghanistan": "ROW2",
+    "Bangladesh": "ROW2",
+    "Bhutan": "ROW2",
+    "Burma": "ROW2",
+    "Brunei": "ROW2",
+    "Cambodia": "ROW2",
+    "Cook Islands": "ROW2",
+    "Federated States of Micronesia": "ROW2",
+    "Fiji": "ROW2",
+    "Kiribati": "ROW2",
+    "Laos": "ROW2",
+    "Maldives": "ROW2",
+    "Marshall Islands": "ROW2",
+    "Mongolia": "ROW2",
+    "Nepal": "ROW2",
+    "New Caledonia": "ROW2",
+    "Niue": "ROW2",
+    "North Korea": "ROW2",
+    "Pakistan": "ROW2",
+    "Palau": "ROW2",
+    "Papua New Guinea": "ROW2",
+    "Solomon Islands": "ROW2",
+    "Sri Lanka": "ROW2",
+    "Timor-Leste": "ROW2",
+    "Tonga": "ROW2",
+    "Tuvalu": "ROW2",
+    "Vanuatu": "ROW2",
+    "Nigeria": "ROW2",
+    "Algeria": "ROW2",
+    "Morocco": "ROW2",
+    "Angola": "ROW2",
+    "Kenya": "ROW2",
+    "Ethiopia": "ROW2",
+    "Tanzania": "ROW2",
+    "Ghana": "ROW2",
+    "Ivory Coast": "ROW2",
+    "Democratic Republic of the Congo": "ROW2",
+    "Uganda": "ROW2",
+    "Tunisia": "ROW2",
+    "Cameroon": "ROW2",
+    "Sudan": "ROW2",
+    "Libya": "ROW2",
+    "Zimbabwe": "ROW2",
+    "Senegal": "ROW2",
+    "Zambia": "ROW2",
+    "Gabon": "ROW2",
+    "Guinea": "ROW2",
+    "Mali": "ROW2",
+    "Burkina Faso": "ROW2",
+    "Botswana": "ROW2",
+    "Mozambique": "ROW2",
+    "Benin": "ROW2",
+    "Equatorial Guinea": "ROW2",
+    "Madagascar": "ROW2",
+    "Niger": "ROW2",
+    "Republic of the Congo\u00a0Republic of Congo": "ROW2",
+    "Chad": "ROW2",
+    "Namibia": "ROW2",
+    "Rwanda": "ROW2",
+    "Malawi": "ROW2",
+    "Mauritius": "ROW2",
+    "Mauritania": "ROW2",
+    "Somalia": "ROW2",
+    "Togo": "ROW2",
+    "South Sudan": "ROW2",
+    "Eswatini": "ROW2",
+    "Sierra Leone": "ROW2",
+    "Liberia": "ROW2",
+    "Djibouti": "ROW2",
+    "Burundi": "ROW2",
+    "Lesotho": "ROW2",
+    "Central African Republic": "ROW2",
+    "Eritrea": "ROW2",
+    "The Gambia": "ROW2",
+    "Cape Verde": "ROW2",
+    "Seychelles": "ROW2",
+    "Guinea-Bissau": "ROW2",
+    "Comoros": "ROW2",
+    "S\u00e3o Tom\u00e9 and Pr\u00edncipe": "ROW2",
+    "Akrotiri and Dhekelia": "ROW2",
+    "Armenia": "ROW2",
+    "Azerbaijan": "ROW2",
+    "Belarus": "ROW2",
+    "Kazakhstan": "ROW2",
+    "Kyrgyzstan": "ROW2",
+    "Moldova": "ROW2",
+    "Tajikistan": "ROW2",
+    "Uzbekistan": "ROW2",
+    "Bahrain": "ROW2",
+    "Iran": "ROW2",
+    "Iraq": "ROW2",
+    "Jordan": "ROW2",
+    "Kuwait": "ROW2",
+    "Lebanon": "ROW2",
+    "Oman": "ROW2",
+    "Palestine": "ROW2",
+    "Syria": "ROW2",
+    "Yemen": "ROW2"
+  }
+}
