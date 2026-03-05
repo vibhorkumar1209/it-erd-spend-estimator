@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Analytics</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import { checkAuth } from './js/auth.js';
+        checkAuth(true); // Requires Admin privileges
+    </script>
+</head>
+
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div>
+                <div class="brand-logo">AdminPanel</div>
+                <h2 style="color: var(--text-dim); font-size: 0.9rem;">Visitor Analytics Dashboard</h2>
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button id="refreshBtn" class="btn btn-primary"
+                    style="width: auto; padding: 0.5rem 1rem;">Refresh</button>
+                <button id="logoutBtn" class="btn"
+                    style="width: auto; padding: 0.5rem 1rem; border: 1px solid var(--danger); color: var(--danger);">Logout</button>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <section class="stats-grid">
+            <div class="glass-container stat-card">
+                <div class="stat-value" id="totalVisitors">...</div>
+                <div class="stat-label">Total Visits</div>
+            </div>
+            <div class="glass-container stat-card">
+                <div class="stat-value" id="uniqueUsers">...</div>
+                <div class="stat-label">Unique Users</div>
+            </div>
+            <div class="glass-container stat-card">
+                <div class="stat-value" id="avgDailyVisits">...</div>
+                <div class="stat-label">Top Country</div>
+            </div>
+        </section>
+
+        <!-- Charts -->
+        <div class="chart-section">
+            <div class="glass-container chart-card">
+                <h3 class="mb-2" style="font-size: 1rem;">Daily Visitor Volume</h3>
+                <canvas id="visitorChart"></canvas>
+            </div>
+            <div class="glass-container chart-card">
+                <h3 class="mb-2" style="font-size: 1rem;">Top Organizations</h3>
+                <canvas id="orgChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Recent Logs Table -->
+        <div class="glass-container" style="padding: 1.5rem; margin-top: 2rem;">
+            <h3 class="mb-2">Recent Activities</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User (Email)</th>
+                            <th>IP Address</th>
+                            <th>Location</th>
+                            <th>Organization</th>
+                            <th>Device</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">Fetching
+                                latest logs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Logic -->
+    <script type="module">
+        import { db } from './js/firebase-config.js';
+        import { logout } from './js/auth.js';
+        import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        document.getElementById('logoutBtn').onclick = logout;
+        document.getElementById('refreshBtn').onclick = () => window.location.reload();
+
+        async function fetchAnalytics() {
+            try {
+                const logsRef = collection(db, "visitor_logs");
+                const q = query(logsRef, orderBy("timestamp", "desc"), limit(100));
+                const querySnapshot = await getDocs(q);
+
+                const logs = [];
+                querySnapshot.forEach((doc) => {
+                    logs.push(doc.data());
+                });
+
+                updateStats(logs);
+                renderLogsTable(logs);
+                renderCharts(logs);
+            } catch (err) {
+                console.error("Fetch failed:", err);
+            }
+        }
+
+        function updateStats(logs) {
+            document.getElementById('totalVisitors').innerText = logs.length;
+            const uniqueUsers = new Set(logs.map(l => l.email)).size;
+            document.getElementById('uniqueUsers').innerText = uniqueUsers;
+
+            // Find top country for fun info
+            const countries = logs.map(l => l.country).filter(c => c && c !== 'Unknown');
+            const counts = countries.reduce((a, b) => (a[b] = (a[b] || 0) + 1, a), {});
+            const topCountry = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || 'N/A';
+            document.getElementById('avgDailyVisits').innerText = topCountry;
+        }
+
+        function renderLogsTable(logs) {
+            const tbody = document.getElementById('logsTableBody');
+            tbody.innerHTML = logs.map(log => {
+                const date = log.timestamp?.toDate ? log.timestamp.toDate().toLocaleString() : 'N/A';
+                return `
+                    <tr>
+                        <td>${date}</td>
+                        <td title="${log.user_id}">${log.email}</td>
+                        <td>${log.ip}</td>
+                        <td>${log.country || 'Unknown'}</td>
+                        <td>${log.organization || 'Individual'}</td>
+                        <td>${log.device} (${log.browser})</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts(logs) {
+            // Visitor Day Chart
+            const dates = logs.map(l => l.timestamp?.toDate?.().toLocaleDateString()).filter(d => d);
+            const dateCounts = dates.reduce((a, b) => (a[b] = (a[b] || 0) + 1, a), {});
+            const sortedDates = Object.keys(dateCounts).sort((a, b) => new Date(a) - new Date(b));
+
+            new Chart(document.getElementById('visitorChart'), {
+                type: 'line',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Visits',
+                        data: sortedDates.map(d => dateCounts[d]),
+                        borderColor: '#818cf8',
+                        backgroundColor: 'rgba(129, 140, 248, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // Top Orgs Chart (Doughnut)
+            const orgs = logs.map(l => l.organization).filter(o => o && o !== 'Unknown').slice(0, 10);
+            const orgCounts = orgs.reduce((a, b) => (a[b] = (a[b] || 0) + 1, a), {});
+
+            new Chart(document.getElementById('orgChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(orgCounts).slice(0, 5),
+                    datasets: [{
+                        data: Object.values(orgCounts).slice(0, 5),
+                        backgroundColor: ['#818cf8', '#c084fc', '#4f46e5', '#3b82f6', '#10b981'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        fetchAnalytics();
+    </script>
+</body>
+
+</html>

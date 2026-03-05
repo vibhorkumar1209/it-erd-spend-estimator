@@ -2,19 +2,113 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IT & ERD Spending Utility</title>
-  <script type="module" crossorigin src="/it-erd-spend-estimator/assets/index-uoQCZWqN.js"></script>
-  <link rel="stylesheet" crossorigin href="/it-erd-spend-estimator/assets/index-BvQDO6Vy.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Tech Spend Utility</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
-  <div id="root"></div>
+    <div class="auth-wrapper">
+        <div class="glass-container auth-card">
+            <div class="brand-logo">TechSpend</div>
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Login to access your IT & ERD Spending Utility</p>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="email">Email Address</label>
+                    <input class="form-input" type="email" id="email" placeholder="name@company.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-input" type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <div id="errorBox" class="text-danger mb-2" style="display: none; font-size: 0.85rem;"></div>
+
+                <button type="submit" id="loginBtn" class="btn btn-primary">Sign In</button>
+            </form>
+
+            <div class="divider">or continue with</div>
+
+            <button type="button" id="googleLoginBtn" class="btn btn-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/component/google.svg" width="18"
+                    alt="Google Logo">
+                Google Account
+            </button>
+
+            <p class="mt-4" style="font-size: 0.85rem; color: var(--text-dim);">
+                Securely powered by Firebase Authentication
+            </p>
+        </div>
+    </div>
+
+    <!-- Privacy Banner -->
+    <div id="privacyBanner" class="glass-container privacy-banner">
+        <div class="privacy-content">
+            <strong>Privacy Note:</strong> This application tracks visitor activity (IP, device, browser, and location)
+            for internal analytics and security purposes. By logging in, you consent to this tracking.
+        </div>
+        <button id="acceptPrivacy" class="btn btn-primary"
+            style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem;">Got it!</button>
+    </div>
+
+    <script type="module">
+        import { loginWithEmail, loginWithGoogle } from './js/auth.js';
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const errorBox = document.getElementById('errorBox');
+        const privacyBanner = document.getElementById('privacyBanner');
+        const acceptPrivacy = document.getElementById('acceptPrivacy');
+
+        // Check for privacy consent in localStorage
+        if (!localStorage.getItem('privacy_consent')) {
+            privacyBanner.style.display = 'flex';
+        }
+
+        acceptPrivacy.onclick = () => {
+            localStorage.setItem('privacy_consent', 'true');
+            privacyBanner.style.display = 'none';
+        };
+
+        loginForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            loginBtn.innerText = 'Signing in...';
+            loginBtn.disabled = true;
+            errorBox.style.display = 'none';
+
+            try {
+                await loginWithEmail(email, password);
+                // Redirect on success happens in auth.js
+            } catch (error) {
+                console.error(error);
+                errorBox.innerText = 'Login failed. Please check your credentials.';
+                errorBox.style.display = 'block';
+                loginBtn.innerText = 'Sign In';
+                loginBtn.disabled = false;
+            }
+        };
+
+        googleLoginBtn.onclick = async () => {
+            try {
+                await loginWithGoogle();
+                // Redirect on success happens in auth.js
+            } catch (error) {
+                console.error(error);
+                errorBox.innerText = 'Google login failed. Try again.';
+                errorBox.style.display = 'block';
+            }
+        };
+    </script>
 </body>
 
 </html>
