@@ -66,7 +66,7 @@ function handlePostAuth(user) {
         localStorage.removeItem(ADMIN_STORAGE_KEY);
     }
     // Success redirect
-    window.location.href = '/app.html';
+    window.location.href = 'app.html';
 }
 
 /**
