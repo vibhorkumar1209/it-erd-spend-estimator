@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IT & ERD Spending Utility - Secured</title>
+    <!-- Include Auth Guard at the top to prevent flash of content -->
+    <script type="module">
+        import { checkAuth } from './js/auth.js';
+        checkAuth(); // Redirects to login.html if not authenticated
+    </script>
+    <link rel="stylesheet" href="css/styles.css">
+    <script type="module" crossorigin src="/it-erd-spend-estimator/assets/index-uoQCZWqN.js"></script>
+    <link rel="stylesheet" crossorigin href="/it-erd-spend-estimator/assets/index-BvQDO6Vy.css">
+    <style>
+        /* Loading overlay while Auth check finishes */
+        #auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="auth-loading">
+        <div class="glass-container" style="padding: 2rem; color: #94a3b8;">
+            Verifying Identity...
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="root"></div>
+
+    <script type="module">
+        import { auth } from './js/firebase-config.js';
+        import { logout } from './js/auth.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Hide loading overlay once auth session is confirmed
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('auth-loading').style.display = 'none';
+            }
+        });
+
+        document.getElementById('logoutBtn').onclick = logout;
+    </script>
+
+    <!-- 
+        NOTE FOR THE USER: 
+        If you are using a React/Vite app, you should:
+        1. Build your app using 'npm run build'.
+        2. Copy the contents of the built 'dist/index.html' into this file's <body> section.
+        3. Ensure paths to assets like /assets/index-xxxx.js are correct.
+    -->
+    <!-- Placeholder for built React Bundle (example) -->
+    <!-- <script type="module" src="/web-app/dist/assets/index.js"></script> -->
+</body>
+
+</html>
