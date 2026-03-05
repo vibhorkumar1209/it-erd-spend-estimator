@@ -1,17 +1,17 @@
 // Firebase Configuration
 // Replace with your values from Firebase Console -> Project Settings -> General -> Web Apps
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID"
+    apiKey: "AIzaSyDmZ0N1IwYj5ENbolYJt10YqJNxl3zVKAE",
+    authDomain: "tech-spend-utility.firebaseapp.com",
+    projectId: "tech-spend-utility",
+    storageBucket: "tech-spend-utility.firebasestorage.app",
+    messagingSenderId: "766101035986",
+    appId: "1:766101035986:web:d30e519b4c6fcf1c1e460b",
+    measurementId: "G-2XY3Y8NVXL"
 };
 
 // Admin email for dashboard access
-const ADMIN_EMAIL = "admin@yourcompany.com";
+const ADMIN_EMAIL = "vibhorkumar123@gmail.com";
 
 // If you want to use a specific company domain for tracking (optional)
 const TARGET_COMPANY_DOMAIN = "yourcompany.com";
