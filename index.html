@@ -15,8 +15,8 @@
     <div class="auth-wrapper">
         <div class="glass-container auth-card">
             <div class="brand-logo">RefractOne</div>
-            <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Login to access your RefractOne Tech Spend Utility</p>
+            <h1 id="authTitle" class="auth-title">Welcome Back</h1>
+            <p id="authSubtitle" class="auth-subtitle">Login to access your RefractOne Tech Spend Utility</p>
 
             <form id="loginForm">
                 <div class="form-group">
@@ -33,12 +33,19 @@
                 <button type="submit" id="loginBtn" class="btn btn-primary">Sign In</button>
             </form>
 
+            <p class="mt-4" style="font-size: 0.9rem;">
+                <span id="toggleText" style="color: var(--text-dim);">Don't have an account?</span>
+                <a href="#" id="toggleAuth"
+                    style="color: var(--primary); font-weight: 600; text-decoration: none; margin-left: 0.5rem;">Sign
+                    Up</a>
+            </p>
+
             <div class="divider">or continue with</div>
 
             <button type="button" id="googleLoginBtn" class="btn btn-google">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/component/google.svg" width="18"
-                    alt="Google Logo">
-                Google Account
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" width="20" alt="G"
+                    style="margin-right: 2px;">
+                <span id="googleBtnText">Google Account</span>
             </button>
 
             <p class="mt-4" style="font-size: 0.85rem; color: var(--text-dim);">
@@ -58,14 +65,21 @@
     </div>
 
     <script type="module">
-        import { loginWithEmail, loginWithGoogle } from './js/auth.js';
+        import { loginWithEmail, signUpWithEmail, loginWithGoogle } from './js/auth.js';
 
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const googleBtnText = document.getElementById('googleBtnText');
         const errorBox = document.getElementById('errorBox');
+        const authTitle = document.getElementById('authTitle');
+        const authSubtitle = document.getElementById('authSubtitle');
+        const toggleAuth = document.getElementById('toggleAuth');
+        const toggleText = document.getElementById('toggleText');
         const privacyBanner = document.getElementById('privacyBanner');
         const acceptPrivacy = document.getElementById('acceptPrivacy');
+
+        let isSignUp = false;
 
         // Check for privacy consent in localStorage
         if (!localStorage.getItem('privacy_consent')) {
@@ -77,23 +91,50 @@
             privacyBanner.style.display = 'none';
         };
 
+        toggleAuth.onclick = (e) => {
+            e.preventDefault();
+            isSignUp = !isSignUp;
+
+            if (isSignUp) {
+                authTitle.innerText = 'Create Account';
+                authSubtitle.innerText = 'Join RefractOne Tech Spend Utility';
+                loginBtn.innerText = 'Sign Up';
+                toggleText.innerText = 'Already have an account?';
+                toggleAuth.innerText = 'Sign In';
+                googleBtnText.innerText = 'Sign Up with Google';
+            } else {
+                authTitle.innerText = 'Welcome Back';
+                authSubtitle.innerText = 'Login to access your RefractOne Tech Spend Utility';
+                loginBtn.innerText = 'Sign In';
+                toggleText.innerText = "Don't have an account?";
+                toggleAuth.innerText = 'Sign Up';
+                googleBtnText.innerText = 'Google Account';
+            }
+            errorBox.style.display = 'none';
+        };
+
         loginForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            loginBtn.innerText = 'Signing in...';
+            loginBtn.innerText = isSignUp ? 'Creating account...' : 'Signing in...';
             loginBtn.disabled = true;
             errorBox.style.display = 'none';
 
             try {
-                await loginWithEmail(email, password);
-                // Redirect on success happens in auth.js
+                if (isSignUp) {
+                    await signUpWithEmail(email, password);
+                } else {
+                    await loginWithEmail(email, password);
+                }
             } catch (error) {
                 console.error(error);
-                errorBox.innerText = 'Login failed. Please check your credentials.';
+                errorBox.innerText = error.message.includes('email-already-in-use')
+                    ? 'Email already in use. Try signing in.'
+                    : 'Authentication failed. Please check your credentials.';
                 errorBox.style.display = 'block';
-                loginBtn.innerText = 'Sign In';
+                loginBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
                 loginBtn.disabled = false;
             }
         };
@@ -101,10 +142,9 @@
         googleLoginBtn.onclick = async () => {
             try {
                 await loginWithGoogle();
-                // Redirect on success happens in auth.js
             } catch (error) {
                 console.error(error);
-                errorBox.innerText = 'Google login failed. Try again.';
+                errorBox.innerText = 'Google authentication failed. Try again.';
                 errorBox.style.display = 'block';
             }
         };

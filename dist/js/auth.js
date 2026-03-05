@@ -1,6 +1,7 @@
 import { auth, ADMIN_EMAIL } from './firebase-config.js';
 import {
     signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithPopup,
     onAuthStateChanged,
@@ -17,6 +18,17 @@ const ADMIN_STORAGE_KEY = 'is_admin';
 export async function loginWithEmail(email, password) {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        await trackVisitor(user);
+        handlePostAuth(user);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export async function signUpWithEmail(email, password) {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         await trackVisitor(user);
         handlePostAuth(user);
