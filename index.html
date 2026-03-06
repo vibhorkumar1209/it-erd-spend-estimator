@@ -14,9 +14,8 @@
 <body>
     <div class="auth-wrapper">
         <div class="glass-container auth-card">
-            <div class="brand-logo">RefractOne</div>
-            <h1 id="authTitle" class="auth-title">RefractOne Welcomes You</h1>
-            <p id="authSubtitle" class="auth-subtitle">Login to access your RefractOne Tech Spend Utility</p>
+            <div class="brand-logo">RefractOne Tech Spend Predictor</div>
+            <p id="authSubtitle" class="auth-subtitle">Login for access</p>
 
             <form id="loginForm">
                 <div class="form-group">
@@ -72,7 +71,6 @@
         const googleLoginBtn = document.getElementById('googleLoginBtn');
         const googleBtnText = document.getElementById('googleBtnText');
         const errorBox = document.getElementById('errorBox');
-        const authTitle = document.getElementById('authTitle');
         const authSubtitle = document.getElementById('authSubtitle');
         const toggleAuth = document.getElementById('toggleAuth');
         const toggleText = document.getElementById('toggleText');
@@ -96,15 +94,13 @@
             isSignUp = !isSignUp;
 
             if (isSignUp) {
-                authTitle.innerText = 'Join RefractOne';
-                authSubtitle.innerText = 'Create an account to get started';
+                authSubtitle.innerText = 'Create an account for access';
                 loginBtn.innerText = 'Sign Up';
                 toggleText.innerText = 'Already have an account?';
                 toggleAuth.innerText = 'Sign In';
                 googleBtnText.innerText = 'Sign Up with Google';
             } else {
-                authTitle.innerText = 'RefractOne Welcomes You';
-                authSubtitle.innerText = 'Login to access your RefractOne Tech Spend Utility';
+                authSubtitle.innerText = 'Login for access';
                 loginBtn.innerText = 'Sign In';
                 toggleText.innerText = "Don't have an account?";
                 toggleAuth.innerText = 'Sign Up';
