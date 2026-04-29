@@ -1,9 +1,4 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-// Load data at cold-start
-const dataPath = join(process.cwd(), 'src', 'data.json');
-const data = JSON.parse(readFileSync(dataPath, 'utf-8'));
+import data from '../../src/data.json';
 
 export function getRawData() {
     return data;
