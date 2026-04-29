@@ -1,4 +1,4 @@
-import data from '../../src/data.json';
+import data from '../data.json';
 
 export function getRawData() {
     return data;
