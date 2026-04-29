@@ -6,13 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RefractOne Tech Spend - Secured</title>
     <!-- Include Auth Guard at the top to prevent flash of content -->
-    <script type="module">
-        import { checkAuth } from './js/auth.js';
-        checkAuth(); // Redirects to login.html if not authenticated
-    </script>
-    <link rel="stylesheet" href="css/styles.css">
-    <script type="module" crossorigin src="/it-erd-spend-estimator/assets/index-uoQCZWqN.js"></script>
-    <link rel="stylesheet" crossorigin href="/it-erd-spend-estimator/assets/index-BvQDO6Vy.css">
     <style>
         /* Loading overlay while Auth check finishes */
         #auth-loading {
@@ -28,6 +21,10 @@
             z-index: 10000;
         }
     </style>
+  <script type="module" crossorigin src="/assets/app-DPGkXlXc.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/auth-CLBAGaMR.js">
+  <link rel="stylesheet" crossorigin href="/assets/auth-m5xdnqTl.css">
+  <link rel="stylesheet" crossorigin href="/assets/app-BgY3L7LZ.css">
 </head>
 
 <body>
@@ -40,20 +37,6 @@
     <!-- MAIN APP WRAPPER -->
     <div id="root"></div>
 
-    <script type="module">
-        import { auth } from './js/firebase-config.js';
-        import { logout } from './js/auth.js';
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        // Hide loading overlay once auth session is confirmed
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('auth-loading').style.display = 'none';
-            }
-        });
-
-        document.getElementById('logoutBtn').onclick = logout;
-    </script>
 
     <!-- 
         NOTE FOR THE USER: 
