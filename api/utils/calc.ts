@@ -1,4 +1,4 @@
-import { data } from '../data';
+import { data } from '../calculator-data';
 
 export function getRawData() {
     return data;
