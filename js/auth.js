@@ -19,7 +19,7 @@ export async function loginWithEmail(email, password) {
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        await trackVisitor(user);
+        try { await trackVisitor(user); } catch (e) { console.warn('Tracking failed:', e); }
         handlePostAuth(user);
     } catch (error) {
         throw error;
@@ -30,7 +30,7 @@ export async function signUpWithEmail(email, password) {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        await trackVisitor(user);
+        try { await trackVisitor(user); } catch (e) { console.warn('Tracking failed:', e); }
         handlePostAuth(user);
     } catch (error) {
         throw error;
@@ -42,7 +42,7 @@ export async function loginWithGoogle() {
         const provider = new GoogleAuthProvider();
         const userCredential = await signInWithPopup(auth, provider);
         const user = userCredential.user;
-        await trackVisitor(user);
+        try { await trackVisitor(user); } catch (e) { console.warn('Tracking failed:', e); }
         handlePostAuth(user);
     } catch (error) {
         throw error;
