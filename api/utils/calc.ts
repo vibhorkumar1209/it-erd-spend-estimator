@@ -268,3 +268,34 @@ export function calculateDesktop(companyName: string, revenue: number, industry:
         itBreakdown, erdBreakdown, emergingTech
     };
 }
+
+export function calculateITSpendDesktop(companyName: string, revenue: number, industry: string, country: string) {
+    const full = calculateDesktop(companyName, revenue, industry, country);
+    return {
+        companyName: full.companyName,
+        revenue: full.revenue,
+        industry: full.industry,
+        country: full.country,
+        region: full.region,
+        trends: full.trends.map(t => ({ year: t.year, itSpend: t.itSpend, itPercent: t.itPercent, itYoY: t.itYoY })),
+        itCAGR_Historical: full.itCAGR_Historical,
+        itCAGR_Forecast: full.itCAGR_Forecast,
+        itBreakdown: full.itBreakdown,
+        emergingTech: full.emergingTech
+    };
+}
+
+export function calculateERDSpendDesktop(companyName: string, revenue: number, industry: string, country: string) {
+    const full = calculateDesktop(companyName, revenue, industry, country);
+    return {
+        companyName: full.companyName,
+        revenue: full.revenue,
+        industry: full.industry,
+        country: full.country,
+        region: full.region,
+        trends: full.trends.map(t => ({ year: t.year, erdSpend: t.erdSpend, erdPercent: t.erdPercent, erdYoY: t.erdYoY })),
+        erdCAGR_Historical: full.erdCAGR_Historical,
+        erdCAGR_Forecast: full.erdCAGR_Forecast,
+        erdBreakdown: full.erdBreakdown
+    };
+}

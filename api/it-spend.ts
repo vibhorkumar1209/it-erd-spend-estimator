@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { calculateAll } from './utils/calc';
+import { calculateITSpendDesktop } from './utils/calc';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -15,11 +15,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const fullResult = calculateAll(String(companyName), Number(revenue), String(industry), String(country));
-        return res.status(200).json({
-            companyInfo: fullResult.companyInfo,
-            itSpend: fullResult.itSpend
-        });
+        const result = calculateITSpendDesktop(String(companyName), Number(revenue), String(industry), String(country));
+        return res.status(200).json(result);
     } catch (error: any) {
         return res.status(500).json({ error: 'Calculation failed', message: error.message });
     }
