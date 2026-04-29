@@ -18,7 +18,9 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         const fullResult = calculateAll(String(companyName), Number(revenue), String(industry), String(country));
         return res.status(200).json({
             companyInfo: fullResult.companyInfo,
-            erdSpend: fullResult.erdSpend
+            chartData: {
+                trends: fullResult.erdSpend.trends
+            }
         });
     } catch (error: any) {
         return res.status(500).json({ error: 'Calculation failed', message: error.message });

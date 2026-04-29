@@ -18,7 +18,11 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         const fullResult = calculateAll(String(companyName), Number(revenue), String(industry), String(country));
         return res.status(200).json({
             companyInfo: fullResult.companyInfo,
-            erdSpend: fullResult.erdSpend
+            tableData: {
+                breakdown: fullResult.itSpend.breakdown,
+                cagrHistorical: fullResult.itSpend.cagrHistorical,
+                cagrForecast: fullResult.itSpend.cagrForecast
+            }
         });
     } catch (error: any) {
         return res.status(500).json({ error: 'Calculation failed', message: error.message });
