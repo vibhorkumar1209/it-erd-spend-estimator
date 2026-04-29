@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getIndustries } from '../src/services/calculationEngine';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+const data = JSON.parse(readFileSync(join(process.cwd(), 'src', 'data.json'), 'utf-8'));
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(200).json({ industries: getIndustries() });
+    return res.status(200).json({ industries: Object.keys(data.multiyear.it).sort() });
 }
