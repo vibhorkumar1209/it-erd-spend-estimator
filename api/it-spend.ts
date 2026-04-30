@@ -9,7 +9,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
 
-    const { companyName, revenue, industry, country } = req.body;
+    const body = req.body || {};
+    const { companyName, revenue, industry, country } = body;
     if (!companyName || revenue === undefined || !industry || !country) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
