@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Spend API Console</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .playground-wrapper {
+            max-width: 1200px;
+            margin: 3rem auto;
+            display: grid;
+            grid-template-columns: 450px 1fr;
+            gap: 2rem;
+            padding: 0 2rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .config-panel {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .result-panel {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-height: 800px;
+        }
+
+        .api-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #818cf8;
+            flex: 1;
+            border: 1px solid var(--glass-border);
+        }
+
+        .endpoint-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .endpoint-btn {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: var(--text-dim);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .endpoint-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .header-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .playground-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header-content">
+        <div class="brand-logo">RefractOne</div>
+        <h1>API Playground</h1>
+        <p class="auth-subtitle">Real-time consumption of IT & ERD Spend intelligence</p>
+    </div>
+
+    <div class="playground-wrapper">
+        <!-- Input Section -->
+        <div class="glass-container config-panel">
+            <div class="form-group">
+                <label class="form-label">Endpoint Selection</label>
+                <div class="endpoint-selector">
+                    <button class="endpoint-btn active" data-endpoint="/api/calculate">Full Calculation</button>
+                    <button class="endpoint-btn" data-endpoint="/api/it-spend">IT Spend Only</button>
+                    <button class="endpoint-btn" data-endpoint="/api/erd-spend">ERD Spend Only</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Company Name</label>
+                <input type="text" id="companyName" class="form-input" placeholder="e.g. Global Motors" value="Global Motors">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Annual Revenue ($ Millions)</label>
+                <input type="number" id="revenue" class="form-input" placeholder="e.g. 1000" value="1000">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Industry</label>
+                <select id="industry" class="form-input">
+                    <option value="Automotive">Automotive</option>
+                    <option value="Software">Software</option>
+                    <option value="IT Hardware">IT Hardware</option>
+                    <option value="Aerospace & Defence">Aerospace & Defence</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Country</label>
+                <select id="country" class="form-input">
+                    <option value="USA">USA</option>
+                    <option value="Norway">Norway</option>
+                    <option value="Germany">Germany</option>
+                    <option value="UK">UK</option>
+                </select>
+            </div>
+
+            <button id="runBtn" class="btn btn-primary" style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+                <span>Execute Request</span>
+                <div class="loading-spinner" id="spinner"></div>
+            </button>
+        </div>
+
+        <!-- Result Section -->
+        <div class="glass-container result-panel">
+            <div>
+                <span class="api-badge" id="methodBadge">POST</span>
+                <span style="font-size: 0.85rem; color: var(--text-dim);" id="activeUrl">/api/calculate</span>
+            </div>
+            
+            <pre id="jsonOutput">// Response will appear here after execution...</pre>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <span id="statusText" style="font-size: 0.85rem; color: var(--text-dim);">Ready</span>
+                <button class="endpoint-btn" id="copyBtn">Copy JSON</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'https://web-app-tan-sigma.vercel.app';
+        let currentEndpoint = '/api/calculate';
+
+        // Selectors
+        const endpointBtns = document.querySelectorAll('.endpoint-btn[data-endpoint]');
+        const runBtn = document.getElementById('runBtn');
+        const spinner = document.getElementById('spinner');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const activeUrlDisplay = document.getElementById('activeUrl');
+        const statusText = document.getElementById('statusText');
+        const copyBtn = document.getElementById('copyBtn');
+
+        // Dynamic Loading of Industries/Countries
+        async function loadOptions() {
+            try {
+                const [indRes, countRes] = await Promise.all([
+                    fetch(`${BASE_URL}/api/industries`),
+                    fetch(`${BASE_URL}/api/countries`)
+                ]);
+                
+                const indData = await indRes.json();
+                const countData = await countRes.json();
+
+                const indSelect = document.getElementById('industry');
+                const countSelect = document.getElementById('country');
+
+                if(indData.industries) {
+                    indSelect.innerHTML = indData.industries.map(i => `<option value="${i}">${i}</option>`).join('');
+                }
+                if(countData.countries) {
+                    countSelect.innerHTML = countData.countries.map(c => `<option value="${c}">${c}</option>`).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load initial options', e);
+                statusText.innerText = 'Warning: Using fallback options';
+            }
+        }
+
+        // Initialize
+        loadOptions();
+
+        // Handle Endpoint Selection
+        endpointBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                endpointBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentEndpoint = btn.dataset.endpoint;
+                activeUrlDisplay.innerText = currentEndpoint;
+            });
+        });
+
+        // Execute Request
+        runBtn.addEventListener('click', async () => {
+            const payload = {
+                companyName: document.getElementById('companyName').value,
+                revenue: Number(document.getElementById('revenue').value),
+                industry: document.getElementById('industry').value,
+                country: document.getElementById('country').value
+            };
+
+            // Reset UI
+            jsonOutput.innerText = '// Fetching data...';
+            spinner.style.display = 'block';
+            runBtn.disabled = true;
+            statusText.innerText = 'Processing...';
+
+            try {
+                const startTime = performance.now();
+                const response = await fetch(`${BASE_URL}${currentEndpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                const duration = Math.round(performance.now() - startTime);
+
+                jsonOutput.innerText = JSON.stringify(data, null, 2);
+                statusText.innerText = `Success (${response.status} ${response.statusText}) - ${duration}ms`;
+                statusText.style.color = 'var(--success)';
+            } catch (error) {
+                jsonOutput.innerText = `Error: ${error.message}`;
+                statusText.innerText = 'Failed to fetch data';
+                statusText.style.color = 'var(--danger)';
+            } finally {
+                spinner.style.display = 'none';
+                runBtn.disabled = false;
+            }
+        });
+
+        // Copy Clipboard
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(jsonOutput.innerText);
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = 'Copied!';
+            setTimeout(() => copyBtn.innerText = originalText, 2000);
+        });
+    </script>
+</body>
+</html>
