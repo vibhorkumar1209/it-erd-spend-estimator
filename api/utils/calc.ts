@@ -1,7 +1,10 @@
 import fs from 'fs';
-import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-const dataPath = path.join(process.cwd(), 'api', 'utils', 'calculator-data.json');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const dataPath = join(__dirname, 'calculator-data.json');
 const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
 export { data };
