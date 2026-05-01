@@ -1,11 +1,6 @@
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const dataPath = join(__dirname, 'calculator-data.json');
-const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const data = require('./calculator-data.json');
 
 export { data };
 
