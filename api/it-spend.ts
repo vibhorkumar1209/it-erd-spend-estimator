@@ -16,8 +16,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const result = calculateITSpendDesktop(String(companyName), Number(revenue), String(industry), String(country));
-        return res.status(200).json(result);
+        // const result = calculateITSpendDesktop(String(companyName), Number(revenue), String(industry), String(country));
+        return res.status(200).json({ message: "Import worked", dataKeys: Object.keys(data) });
     } catch (error: any) {
         return res.status(500).json({ error: 'Calculation failed', message: error.message });
     }
