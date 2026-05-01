@@ -1,4 +1,10 @@
-import data from './calculator-data.json';
+import fs from 'fs';
+import path from 'path';
+
+const dataPath = path.join(process.cwd(), 'api', 'utils', 'calculator-data.json');
+const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+export { data };
 
 export function getRawData() {
     return data;
