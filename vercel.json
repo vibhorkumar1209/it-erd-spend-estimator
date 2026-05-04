@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "api/utils/calculator-data.json"
+      "includeFiles": "api/_utils/calculator-data.json"
     }
   },
   "headers": [
