@@ -8,7 +8,64 @@ export function getRawData() {
     return data;
 }
 
-export function calculateAll(companyName: string, revenue: number, industry: string, country: string) {
+const countryAliases: Record<string, string> = {
+    'united states': 'USA',
+    'united states of america': 'USA',
+    'us': 'USA',
+    'united kingdom': 'UK',
+    'britain': 'UK',
+    'u.k.': 'UK',
+    'u.s.a.': 'USA',
+    'u.s.': 'USA'
+};
+
+const industryAliases: Record<string, string> = {
+    'financial services': 'Retail Banking / Commercial Banking',
+    'banking': 'Retail Banking / Commercial Banking',
+    'finance': 'Financial Markets / Capital Markets / Investments',
+    'investment': 'Financial Markets / Capital Markets / Investments',
+    'high tech': 'High Tech / Technology',
+    'tech': 'High Tech / Technology',
+    'technology': 'High Tech / Technology',
+    'social media': 'High Tech / Technology',
+    'internet': 'High Tech / Technology',
+    'pharma': 'Pharmaceuticals / Life Sciences',
+    'healthcare': 'Healthcare Providers',
+    'oil & gas': 'Energy (Oil & Gas)',
+    'oil and gas': 'Energy (Oil & Gas)'
+};
+
+function normalizeInput(input: string, mapping: Record<string, any>, aliases: Record<string, string>): string {
+    const normalized = input.trim().toLowerCase();
+    
+    // Check aliases first
+    if (aliases[normalized]) return aliases[normalized];
+    
+    // Check case-insensitive exact match
+    for (const key of Object.keys(mapping)) {
+        if (key.toLowerCase() === normalized) return key;
+    }
+    
+    // Check partial match (input contains key or key contains input)
+    for (const key of Object.keys(mapping)) {
+        const keyLower = key.toLowerCase();
+        if (keyLower.includes(normalized) || normalized.includes(keyLower)) return key;
+    }
+    
+    // Deep partial match (check each word)
+    const words = normalized.split(/\s+/);
+    for (const key of Object.keys(mapping)) {
+        const keyLower = key.toLowerCase();
+        if (words.some(word => word.length > 3 && keyLower.includes(word))) return key;
+    }
+    
+    return input; // Fallback to original
+}
+
+export function calculateAll(companyName: string, revenue: number, industryInput: string, countryInput: string) {
+    const country = normalizeInput(countryInput, data.countries, countryAliases);
+    const industry = normalizeInput(industryInput, data.multiyear.it, industryAliases);
+
     const region: string = data.countries[country] || 'ROW2';
     const regionAdj: number = data.lookups.region_adj[region] || 0;
 
@@ -144,7 +201,10 @@ export function calculateAll(companyName: string, revenue: number, industry: str
     };
 }
 
-export function calculateDesktop(companyName: string, revenue: number, industry: string, country: string) {
+export function calculateDesktop(companyName: string, revenue: number, industryInput: string, countryInput: string) {
+    const country = normalizeInput(countryInput, data.countries, countryAliases);
+    const industry = normalizeInput(industryInput, data.multiyear.it, industryAliases);
+
     const region: string = data.countries[country] || 'ROW2';
     const regionAdj: number = data.lookups.region_adj[region] || 0;
 
