@@ -202,12 +202,8 @@ export function calculateAll(companyName: string, revenue: number, industryInput
 }
 
 export function calculateDesktop(companyName: string, revenue: number, industryInput: string, countryInput: string) {
-    console.log('Calculating for:', { companyName, revenue, industryInput, countryInput });
-    
     const country = normalizeInput(countryInput, data.countries, countryAliases);
     const industry = normalizeInput(industryInput, data.multiyear.it, industryAliases);
-
-    console.log('Normalized to:', { country, industry });
 
     const region: string = data.countries[country] || 'ROW2';
     const regionAdj: number = data.lookups.region_adj[region] || 0;
