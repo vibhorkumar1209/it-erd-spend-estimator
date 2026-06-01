@@ -51,11 +51,11 @@ function App() {
             ['Company Name', results.companyName],
             ['Industry', results.industry],
             ['Coverage Country', results.country],
-            ['Revenue (Baseline)', results.revenue],
+            ['Revenue (Baseline)', formatCurrency(results.revenue)],
             [],
             ['MULTI-YEAR SPEND MATRIX'],
-            ['Year', 'IT Spend (%)', 'IT Spend ($M)', 'ERD Spend (%)', 'ERD Spend ($M)'],
-            ...results.trends.map(t => [t.year, t.itPercent.toFixed(2) + '%', t.itSpend.toFixed(2), t.erdPercent.toFixed(2) + '%', t.erdSpend.toFixed(2)]),
+            ['Year', 'IT Spend (%)', 'IT Spend', 'ERD Spend (%)', 'ERD Spend'],
+            ...results.trends.map(t => [t.year, t.itPercent.toFixed(2) + '%', formatCurrency(t.itSpend), t.erdPercent.toFixed(2) + '%', formatCurrency(t.erdSpend)]),
             [],
             ['GROWTH METRICS (CAGR)'],
             ['Metric', 'IT Spend', 'ERD Spend'],
@@ -63,22 +63,23 @@ function App() {
             ['Forecast (2024-2030)', results.itCAGR_Forecast.toFixed(2) + '%', results.erdCAGR_Forecast.toFixed(2) + '%'],
             [],
             ['IT SPEND HIERARCHICAL BREAKDOWN (Level 1-3 Only)'],
-            ['Level 1 Category', 'Level 2 Category', 'Level 3 Subcategory', 'IT Allocation %', 'Spend Value ($M)'],
+            ['Level 1 Category', 'Level 2 Category', 'Level 3 Subcategory', 'IT Allocation %', 'Spend Value'],
         ];
 
         results.itBreakdown.forEach(l1 => {
             l1.children?.forEach(l2 => {
                 l2.children?.forEach(l3 => {
-                    lines.push([l1.name, l2.name, l3.name, (l3.percentage / 100).toFixed(2), l3.value.toFixed(2)]);
+                    lines.push([l1.name, l2.name, l3.name, (l3.percentage / 100).toFixed(2), formatCurrency(l3.value)]);
                 });
             });
         });
 
         lines.push([], ['ERD SPEND COMPOSITION']);
-        lines.push(['Engineering Discipline', 'ERD Allocation %', 'Spend Value ($M)']);
+        lines.push(['Engineering Discipline', 'ERD Allocation %', 'Spend Value']);
         results.erdBreakdown.forEach(item => {
-            lines.push([item.name, (item.percentage / 100).toFixed(2), item.value.toFixed(2)]);
+            lines.push([item.name, (item.percentage / 100).toFixed(2), formatCurrency(item.value)]);
         });
+
 
         const csvContent = lines.map(l => l.map(cell => `"${cell}"`).join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
