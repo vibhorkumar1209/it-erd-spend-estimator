@@ -13,6 +13,16 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 
+function formatCurrency(valueMillion: number): string {
+    const abs = Math.abs(valueMillion);
+    if (abs === 0) return '$0';
+    if (abs < 1) {
+        const k = valueMillion * 1000;
+        return `$${k.toFixed(1)}K`;
+    }
+    return `$${valueMillion.toFixed(2)}M`;
+}
+
 function App() {
     const [companyName, setCompanyName] = useState<string>('General Motors');
     const [revenue, setRevenue] = useState<string>('187440');
@@ -126,7 +136,7 @@ function App() {
                         </div>
                     </td>
                     <td className="px-4 py-3 text-zinc-500 text-[10px] font-mono border-b border-white/5">{item.percentage.toFixed(2)}%</td>
-                    <td className="px-4 py-3 text-right font-mono text-blue-400 text-xs border-b border-white/5 font-bold">${item.value.toFixed(2)}M</td>
+                    <td className="px-4 py-3 text-right font-mono text-blue-400 text-xs border-b border-white/5 font-bold">{formatCurrency(item.value)}</td>
                 </tr>
                 {isExpanded && hasChildren && item.children!.map(child => renderBreakdownRow(child, level + 1))}
             </React.Fragment>
@@ -275,7 +285,7 @@ function App() {
                             <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Total IT Spend (2026)</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">${results.trends.find(t => t.year === 2026)!.itSpend.toFixed(2)}M</span>
+                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{formatCurrency(results.trends.find(t => t.year === 2026)!.itSpend)}</span>
                                     <span className="text-[10px] font-black text-blue-500/60 uppercase">USD</span>
                                 </div>
                             </div>
@@ -284,7 +294,7 @@ function App() {
                             <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total ERD Spend (2026)</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">${results.trends.find(t => t.year === 2026)!.erdSpend.toFixed(2)}M</span>
+                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{formatCurrency(results.trends.find(t => t.year === 2026)!.erdSpend)}</span>
                                     <span className="text-[10px] font-black text-emerald-500/60 uppercase">USD</span>
                                 </div>
                             </div>
@@ -318,14 +328,14 @@ function App() {
                                             <ComposedChart data={itChartData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toFixed(2)}M`} />
+                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v))} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}%`} />
                                                 <Tooltip
                                                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                     itemStyle={{ fontSize: '11px', fontWeight: '900' }}
                                                     formatter={(value: any, name: string) => {
                                                         const num = Number(value);
-                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [`$${num.toFixed(2)}M`, name];
+                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num), name];
                                                     }}
                                                 />
                                                 <Bar yAxisId="left" dataKey="spend" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} name="Spend Value" />
@@ -355,14 +365,14 @@ function App() {
                                             <ComposedChart data={erdChartData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v.toFixed(2)}M`} />
+                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v))} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#34d399" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}%`} />
                                                 <Tooltip
                                                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                     itemStyle={{ fontSize: '11px', fontWeight: '900' }}
                                                     formatter={(value: any, name: string) => {
                                                         const num = Number(value);
-                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [`$${num.toFixed(2)}M`, name];
+                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num), name];
                                                     }}
                                                 />
                                                 <Bar yAxisId="left" dataKey="spend" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} name="Spend Value" />
@@ -384,7 +394,7 @@ function App() {
                                         </div>
                                     </div>
                                     <div className="px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20 self-start sm:self-auto">
-                                        Total: ${etTotalSpend.toFixed(2)}M
+                                        Total: {formatCurrency(etTotalSpend)}
                                     </div>
                                 </div>
                                 <div className="h-[260px] sm:h-[280px]">
@@ -395,11 +405,11 @@ function App() {
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                 itemStyle={{ fontSize: '11px', fontWeight: '900' }}
-                                                formatter={(value: number) => [`$${value.toFixed(2)}M`, "Spend Value"]}
+                                                formatter={(value: number) => [formatCurrency(value), "Spend Value"]}
                                             />
                                             <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={24}>
                                                 {etChartData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                                                <LabelList dataKey="value" position="right" fill="#94a3b8" fontSize={10} fontWeight="900" formatter={(val: number) => `$${val.toFixed(2)}M`} />
+                                                <LabelList dataKey="value" position="right" fill="#94a3b8" fontSize={10} fontWeight="900" formatter={(val: number) => formatCurrency(val)} />
                                             </Bar>
                                         </ComposedChart>
                                     </ResponsiveContainer>
@@ -415,7 +425,7 @@ function App() {
                                             IT Spend by Category
                                         </h3>
                                         <div className="px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
-                                            Total: ${results.trends.find(t => t.year === 2026)!.itSpend.toFixed(2)}M
+                                            Total: {formatCurrency(results.trends.find(t => t.year === 2026)!.itSpend)}
                                         </div>
                                     </div>
 
@@ -442,7 +452,7 @@ function App() {
                                             ERD Spend by Category
                                         </h3>
                                         <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                                            Total: ${results.trends.find(t => t.year === 2026)!.erdSpend.toFixed(2)}M
+                                            Total: {formatCurrency(results.trends.find(t => t.year === 2026)!.erdSpend)}
                                         </div>
                                     </div>
 
@@ -465,7 +475,7 @@ function App() {
                                                             {item.percentage.toFixed(2)}%
                                                         </td>
                                                         <td className="px-6 py-4 text-right pr-8 text-xs font-black text-emerald-400 font-mono">
-                                                            ${item.value.toFixed(2)}M
+                                                             {formatCurrency(item.value)}
                                                         </td>
                                                     </tr>
                                                 ))}
