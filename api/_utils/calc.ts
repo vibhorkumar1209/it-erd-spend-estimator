@@ -62,6 +62,19 @@ function normalizeInput(input: string, mapping: Record<string, any>, aliases: Re
     return input; // Fallback to original
 }
 
+const exchangeRatesToUSD: Record<string, number> = {
+    'USD': 1.0,
+    'EUR': 1.08,
+    'GBP': 1.27,
+    'INR': 0.012,
+    'JPY': 0.0065,
+    'AUD': 0.65,
+    'CAD': 0.74,
+    'CHF': 1.13,
+    'CNY': 0.14,
+    'BRL': 0.20
+};
+
 export function calculateAll(companyName: string, revenue: number, industryInput: string, countryInput: string) {
     const country = normalizeInput(countryInput, data.countries, countryAliases);
     const industry = normalizeInput(industryInput, data.multiyear.it, industryAliases);
@@ -201,19 +214,22 @@ export function calculateAll(companyName: string, revenue: number, industryInput
     };
 }
 
-export function calculateDesktop(companyName: string, revenue: number, industryInput: string, countryInput: string) {
+export function calculateDesktop(companyName: string, revenue: number, industryInput: string, countryInput: string, currency: string = 'USD') {
     const country = normalizeInput(countryInput, data.countries, countryAliases);
     const industry = normalizeInput(industryInput, data.multiyear.it, industryAliases);
 
     const region: string = data.countries[country] || 'ROW2';
     const regionAdj: number = data.lookups.region_adj[region] || 0;
 
+    const exchangeRateToUSD = exchangeRatesToUSD[currency.toUpperCase()] || 1.0;
+    const revenueUSD = revenue * exchangeRateToUSD;
+
     let revenueTier = '<$10M';
-    if (revenue > 5000) revenueTier = '>$5B';
-    else if (revenue > 1000) revenueTier = '$1B-$5B';
-    else if (revenue > 500) revenueTier = '$500M-$1B';
-    else if (revenue > 100) revenueTier = '$100M-$500M';
-    else if (revenue > 10) revenueTier = '$10M-$100M';
+    if (revenueUSD > 5000) revenueTier = '>$5B';
+    else if (revenueUSD > 1000) revenueTier = '$1B-$5B';
+    else if (revenueUSD > 500) revenueTier = '$500M-$1B';
+    else if (revenueUSD > 100) revenueTier = '$100M-$500M';
+    else if (revenueUSD > 10) revenueTier = '$10M-$100M';
 
     const revenueAdj: number = data.lookups.revenue_adj[revenueTier] || 0;
 
@@ -324,6 +340,11 @@ export function calculateDesktop(companyName: string, revenue: number, industryI
 
     return {
         companyName, revenue, industry, country, region,
+        currencyInfo: {
+            currency: currency.toUpperCase(),
+            exchangeRateToUSD,
+            revenueUSD
+        },
         trends,
         itCAGR_Historical: getCAGR(val2022_IT, val2024_IT, 2),
         itCAGR_Forecast: getCAGR(val2024_IT, val2030_IT, 6),
@@ -333,14 +354,15 @@ export function calculateDesktop(companyName: string, revenue: number, industryI
     };
 }
 
-export function calculateITSpendDesktop(companyName: string, revenue: number, industry: string, country: string) {
-    const full = calculateDesktop(companyName, revenue, industry, country);
+export function calculateITSpendDesktop(companyName: string, revenue: number, industry: string, country: string, currency: string = 'USD') {
+    const full = calculateDesktop(companyName, revenue, industry, country, currency);
     return {
         companyName: full.companyName,
-        revenue: full.revenue,
         industry: full.industry,
         country: full.country,
         region: full.region,
+        currencyInfo: full.currencyInfo,
+        revenue: full.revenue,
         trends: full.trends.map(t => ({ year: t.year, itSpend: t.itSpend, itPercent: t.itPercent, itYoY: t.itYoY })),
         itCAGR_Historical: full.itCAGR_Historical,
         itCAGR_Forecast: full.itCAGR_Forecast,
@@ -349,14 +371,15 @@ export function calculateITSpendDesktop(companyName: string, revenue: number, in
     };
 }
 
-export function calculateERDSpendDesktop(companyName: string, revenue: number, industry: string, country: string) {
-    const full = calculateDesktop(companyName, revenue, industry, country);
+export function calculateERDSpendDesktop(companyName: string, revenue: number, industry: string, country: string, currency: string = 'USD') {
+    const full = calculateDesktop(companyName, revenue, industry, country, currency);
     return {
         companyName: full.companyName,
-        revenue: full.revenue,
         industry: full.industry,
         country: full.country,
         region: full.region,
+        currencyInfo: full.currencyInfo,
+        revenue: full.revenue,
         trends: full.trends.map(t => ({ year: t.year, erdSpend: t.erdSpend, erdPercent: t.erdPercent, erdYoY: t.erdYoY })),
         erdCAGR_Historical: full.erdCAGR_Historical,
         erdCAGR_Forecast: full.erdCAGR_Forecast,
