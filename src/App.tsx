@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { calculateSpend, getIndustries, getCountries, BreakdownItem } from './services/calculationEngine';
 import {
     ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -13,14 +13,22 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import React from 'react';
 
-function formatCurrency(valueMillion: number): string {
+const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: '$', EUR: '€', GBP: '£', INR: '₹', JPY: '¥',
+    AUD: 'A$', CAD: 'C$', CHF: 'Fr', CNY: '¥', BRL: 'R$',
+    SGD: 'S$', HKD: 'HK$', KRW: '₩', MXN: 'MX$', SEK: 'kr',
+    NOK: 'kr', DKK: 'kr', ZAR: 'R', AED: 'د.إ', SAR: '﷼',
+};
+
+function formatCurrency(valueMillion: number, currencyCode: string = 'USD'): string {
+    const sym = CURRENCY_SYMBOLS[currencyCode] || currencyCode + ' ';
     const abs = Math.abs(valueMillion);
-    if (abs === 0) return '$0';
+    if (abs === 0) return `${sym}0`;
     if (abs < 1) {
         const k = valueMillion * 1000;
-        return `$${k.toFixed(1)}K`;
+        return `${sym}${k.toFixed(1)}K`;
     }
-    return `$${valueMillion.toFixed(2)}M`;
+    return `${sym}${valueMillion.toFixed(2)}M`;
 }
 
 function App() {
@@ -33,13 +41,40 @@ function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
+    const [currency, setCurrency] = useState<string>('USD');
+    const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({ 'USD': 1 });
+    const [exchangeDate, setExchangeDate] = useState<string>('');
+    const [isRatesLoading, setIsRatesLoading] = useState<boolean>(true);
+
+    useEffect(() => {
+        setIsRatesLoading(true);
+        fetch('https://api.exchangerate-api.com/v4/latest/USD')
+            .then(res => res.json())
+            .then(data => {
+                setExchangeRates(data.rates);
+                setExchangeDate(data.date);
+                setIsRatesLoading(false);
+            })
+            .catch(err => {
+                console.error("Failed to fetch exchange rates:", err);
+                setIsRatesLoading(false);
+            });
+    }, []);
+
+    const currentRate = exchangeRates[currency] || 1;
+
     const industries = useMemo(() => getIndustries(), []);
     const countries = useMemo(() => getCountries(), []);
 
     const results = useMemo(() => {
-        const rev = parseFloat(revenue) || 0;
-        return calculateSpend(companyName, rev, industry, country);
-    }, [companyName, revenue, industry, country]);
+        const localRev = parseFloat(revenue) || 0;
+        const revInUSD = localRev / currentRate;
+        return calculateSpend(companyName, revInUSD, industry, country);
+    }, [companyName, revenue, industry, country, currentRate]);
+
+    // Helper: convert a USD spend value back to the selected local currency for display
+    const toLocal = (usdValue: number) => usdValue * currentRate;
+    const fmt = (usdValue: number) => formatCurrency(toLocal(usdValue), currency);
 
     const toggleExpand = (id: string) => {
         setExpandedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
@@ -51,33 +86,35 @@ function App() {
             ['Company Name', results.companyName],
             ['Industry', results.industry],
             ['Coverage Country', results.country],
-            ['Revenue (Baseline)', formatCurrency(results.revenue)],
+            ['Currency', currency],
+            ['Exchange Rate (1 USD)', currentRate.toFixed(4) + ' ' + currency],
+            ['Revenue (Baseline)', fmt(results.revenue)],
             [],
             ['MULTI-YEAR SPEND MATRIX'],
-            ['Year', 'IT Spend (%)', 'IT Spend', 'ERD Spend (%)', 'ERD Spend'],
-            ...results.trends.map(t => [t.year, t.itPercent.toFixed(2) + '%', formatCurrency(t.itSpend), t.erdPercent.toFixed(2) + '%', formatCurrency(t.erdSpend)]),
+            [`Year`, 'IT Spend (%)', `IT Spend (${currency})`, 'ERD Spend (%)', `ERD Spend (${currency})`],
+            ...results.trends.map(t => [t.year, t.itPercent.toFixed(2) + '%', fmt(t.itSpend), t.erdPercent.toFixed(2) + '%', fmt(t.erdSpend)]),
             [],
             ['GROWTH METRICS (CAGR)'],
             ['Metric', 'IT Spend', 'ERD Spend'],
-            ['Historical (2022-2024)', results.itCAGR_Historical.toFixed(2) + '%', results.erdCAGR_Historical.toFixed(2) + '%'],
-            ['Forecast (2024-2030)', results.itCAGR_Forecast.toFixed(2) + '%', results.erdCAGR_Forecast.toFixed(2) + '%'],
+            ['Historical (2022-2025)', results.itCAGR_Historical.toFixed(2) + '%', results.erdCAGR_Historical.toFixed(2) + '%'],
+            ['Forecast (2025-2030)', results.itCAGR_Forecast.toFixed(2) + '%', results.erdCAGR_Forecast.toFixed(2) + '%'],
             [],
-            ['IT SPEND HIERARCHICAL BREAKDOWN (Level 1-3 Only)'],
-            ['Level 1 Category', 'Level 2 Category', 'Level 3 Subcategory', 'IT Allocation %', 'Spend Value'],
+            [`IT SPEND HIERARCHICAL BREAKDOWN (${currency})`],
+            ['Level 1 Category', 'Level 2 Category', 'Level 3 Subcategory', 'IT Allocation %', `Spend Value (${currency})`],
         ];
 
         results.itBreakdown.forEach(l1 => {
             l1.children?.forEach(l2 => {
                 l2.children?.forEach(l3 => {
-                    lines.push([l1.name, l2.name, l3.name, (l3.percentage / 100).toFixed(2), formatCurrency(l3.value)]);
+                    lines.push([l1.name, l2.name, l3.name, (l3.percentage / 100).toFixed(2), fmt(l3.value)]);
                 });
             });
         });
 
-        lines.push([], ['ERD SPEND COMPOSITION']);
-        lines.push(['Engineering Discipline', 'ERD Allocation %', 'Spend Value']);
+        lines.push([], [`ERD SPEND COMPOSITION (${currency})`]);
+        lines.push(['Engineering Discipline', 'ERD Allocation %', `Spend Value (${currency})`]);
         results.erdBreakdown.forEach(item => {
-            lines.push([item.name, (item.percentage / 100).toFixed(2), formatCurrency(item.value)]);
+            lines.push([item.name, (item.percentage / 100).toFixed(2), fmt(item.value)]);
         });
 
 
@@ -92,22 +129,22 @@ function App() {
         document.body.removeChild(link);
     };
 
-    // Process data for combination charts
+    // Process data for combination charts — convert all spend values to local currency
     const itChartData = results.trends.map(t => ({
         year: t.year,
-        spend: t.itSpend,
+        spend: toLocal(t.itSpend),
         growth: t.itYoY
     }));
 
     const erdChartData = results.trends.map(t => ({
         year: t.year,
-        spend: t.erdSpend,
+        spend: toLocal(t.erdSpend),
         growth: t.erdYoY
     }));
 
     const etChartData = results.emergingTech.map(et => ({
         name: et.name,
-        value: Math.abs(et.value),
+        value: Math.abs(toLocal(et.value)),
         color: et.value >= 0 ? '#3b82f6' : '#f87171'
     }));
 
@@ -137,7 +174,7 @@ function App() {
                         </div>
                     </td>
                     <td className="px-4 py-3 text-zinc-500 text-[10px] font-mono border-b border-white/5">{item.percentage.toFixed(2)}%</td>
-                    <td className="px-4 py-3 text-right font-mono text-blue-400 text-xs border-b border-white/5 font-bold">{formatCurrency(item.value)}</td>
+                    <td className="px-4 py-3 text-right font-mono text-blue-400 text-xs border-b border-white/5 font-bold">{fmt(item.value)}</td>
                 </tr>
                 {isExpanded && hasChildren && item.children!.map(child => renderBreakdownRow(child, level + 1))}
             </React.Fragment>
@@ -199,12 +236,29 @@ function App() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                    <DollarSign className="w-3 h-3" /> 2024 Revenue ($M)
+                                    <DollarSign className="w-3 h-3" /> Currency
+                                </label>
+                                <select
+                                    value={currency} onChange={(e) => setCurrency(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
+                                >
+                                    {Object.keys(exchangeRates).length > 1 ? Object.keys(exchangeRates).map(c => <option key={c} value={c} className="bg-[#020617]">{c}</option>) : <option value="USD" className="bg-[#020617]">USD</option>}
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <DollarSign className="w-3 h-3" /> 2025 Revenue (in selected currency, M)
                                 </label>
                                 <input
                                     type="text" value={revenue} onChange={(e) => setRevenue(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
                                 />
+                                {currency !== 'USD' && !isRatesLoading && (
+                                    <p className="text-[10px] text-zinc-500 font-mono mt-1">
+                                        Conversion: 1 USD = {currentRate.toFixed(4)} {currency} (Date: {exchangeDate})<br/>
+                                        <span className="text-blue-400">Calculated as ${((parseFloat(revenue) || 0) / currentRate).toLocaleString(undefined, { maximumFractionDigits: 2 })}M USD</span>
+                                    </p>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
@@ -286,8 +340,8 @@ function App() {
                             <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Total IT Spend (2026)</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{formatCurrency(results.trends.find(t => t.year === 2026)!.itSpend)}</span>
-                                    <span className="text-[10px] font-black text-blue-500/60 uppercase">USD</span>
+                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{fmt(results.trends.find(t => t.year === 2026)!.itSpend)}</span>
+                                    <span className="text-[10px] font-black text-blue-500/60 uppercase">{currency}</span>
                                 </div>
                             </div>
                         </div>
@@ -295,8 +349,8 @@ function App() {
                             <div className="flex flex-col">
                                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">Total ERD Spend (2026)</span>
                                 <div className="flex items-baseline gap-1">
-                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{formatCurrency(results.trends.find(t => t.year === 2026)!.erdSpend)}</span>
-                                    <span className="text-[10px] font-black text-emerald-500/60 uppercase">USD</span>
+                                    <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tighter">{fmt(results.trends.find(t => t.year === 2026)!.erdSpend)}</span>
+                                    <span className="text-[10px] font-black text-emerald-500/60 uppercase">{currency}</span>
                                 </div>
                             </div>
                         </div>
@@ -329,14 +383,14 @@ function App() {
                                             <ComposedChart data={itChartData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v))} />
+                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v), currency)} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#60a5fa" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}%`} />
                                                 <Tooltip
                                                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                     itemStyle={{ fontSize: '11px', fontWeight: '900' }}
                                                     formatter={(value: any, name: string) => {
                                                         const num = Number(value);
-                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num), name];
+                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num, currency), name];
                                                     }}
                                                 />
                                                 <Bar yAxisId="left" dataKey="spend" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={24} name="Spend Value" />
@@ -366,14 +420,14 @@ function App() {
                                             <ComposedChart data={erdChartData}>
                                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                                 <XAxis dataKey="year" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} />
-                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v))} />
+                                                <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => formatCurrency(Number(v), currency)} />
                                                 <YAxis yAxisId="right" orientation="right" stroke="#34d399" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(2)}%`} />
                                                 <Tooltip
                                                     contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                     itemStyle={{ fontSize: '11px', fontWeight: '900' }}
                                                     formatter={(value: any, name: string) => {
                                                         const num = Number(value);
-                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num), name];
+                                                        return name === "Growth Rate" ? [`${num.toFixed(2)}%`, name] : [formatCurrency(num, currency), name];
                                                     }}
                                                 />
                                                 <Bar yAxisId="left" dataKey="spend" fill="#10b981" radius={[6, 6, 0, 0]} barSize={24} name="Spend Value" />
@@ -395,7 +449,7 @@ function App() {
                                         </div>
                                     </div>
                                     <div className="px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20 self-start sm:self-auto">
-                                        Total: {formatCurrency(etTotalSpend)}
+                                        Total: {formatCurrency(etTotalSpend, currency)}
                                     </div>
                                 </div>
                                 <div className="h-[260px] sm:h-[280px]">
@@ -406,11 +460,11 @@ function App() {
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
                                                 itemStyle={{ fontSize: '11px', fontWeight: '900' }}
-                                                formatter={(value: number) => [formatCurrency(value), "Spend Value"]}
+                                                formatter={(value: number) => [formatCurrency(value, currency), "Spend Value"]}
                                             />
                                             <Bar dataKey="value" radius={[0, 10, 10, 0]} barSize={24}>
                                                 {etChartData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                                                <LabelList dataKey="value" position="right" fill="#94a3b8" fontSize={10} fontWeight="900" formatter={(val: number) => formatCurrency(val)} />
+                                                <LabelList dataKey="value" position="right" fill="#94a3b8" fontSize={10} fontWeight="900" formatter={(val: number) => formatCurrency(val, currency)} />
                                             </Bar>
                                         </ComposedChart>
                                     </ResponsiveContainer>
@@ -426,7 +480,7 @@ function App() {
                                             IT Spend by Category
                                         </h3>
                                         <div className="px-4 py-1.5 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">
-                                            Total: {formatCurrency(results.trends.find(t => t.year === 2026)!.itSpend)}
+                                            Total: {fmt(results.trends.find(t => t.year === 2026)!.itSpend)}
                                         </div>
                                     </div>
 
@@ -453,7 +507,7 @@ function App() {
                                             ERD Spend by Category
                                         </h3>
                                         <div className="px-4 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
-                                            Total: {formatCurrency(results.trends.find(t => t.year === 2026)!.erdSpend)}
+                                            Total: {fmt(results.trends.find(t => t.year === 2026)!.erdSpend)}
                                         </div>
                                     </div>
 
@@ -476,7 +530,7 @@ function App() {
                                                             {item.percentage.toFixed(2)}%
                                                         </td>
                                                         <td className="px-6 py-4 text-right pr-8 text-xs font-black text-emerald-400 font-mono">
-                                                             {formatCurrency(item.value)}
+                                                             {fmt(item.value)}
                                                         </td>
                                                     </tr>
                                                 ))}
