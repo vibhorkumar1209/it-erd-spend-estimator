@@ -90,7 +90,7 @@ function App() {
                 const data = await res.json();
                 usdRevenue = data.revenue;
             } else {
-                const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+                const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
                 if (!apiKey) {
                     throw new Error('GEMINI_API_KEY not configured on server or client');
                 }
