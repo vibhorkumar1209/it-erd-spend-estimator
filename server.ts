@@ -40,15 +40,14 @@ app.get('/api/revenue', async (req, res) => {
     }
 
     try {
-        const domainText = companyDomain ? ` (website/domain: ${companyDomain})` : '';
-        const industryText = industry ? ` in the ${industry} industry` : '';
-        const countryText = country ? `, headquartered in ${country}` : '';
+        const domainText = companyDomain ? ` (domain: ${companyDomain})` : '';
+        const industryText = industry ? ` (hint: ${industry} industry)` : '';
+        const countryText = country ? ` (hint: headquartered in ${country})` : '';
         
-        const prompt = `You are a financial data API. Return the latest annual revenue (2024/2025) of ${companyName}${domainText}${industryText}${countryText} in USD.
+        const prompt = `You are a financial data API. Return the latest annual revenue (2024/2025) of ${companyName}${domainText}${industryText}${countryText} in USD. Note that the industry and HQ hints might be slightly inaccurate, but focus on the company name and domain to identify it.
 Respond ONLY with a valid JSON object in this exact format:
 { "revenue_in_millions": 1500 }
-If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million, the value should be 500.
-Do not include markdown blocks or any other text, just the raw JSON object.`;
+If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million, the value should be 500. If you cannot find the revenue, estimate it or provide the most recent available data. You MUST return a number, never null. Do not include markdown blocks or any other text, just the raw JSON object.`;
         
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
