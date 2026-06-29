@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - RefractOne Tech Spend</title>
-    <link rel="stylesheet" href="css/styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/main-CoW_eIz_.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/auth-CLBAGaMR.js">
+  <link rel="stylesheet" crossorigin href="/assets/auth-m5xdnqTl.css">
 </head>
 
 <body>
@@ -63,88 +65,6 @@
             style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem;">Got it!</button>
     </div>
 
-    <script type="module">
-        import { loginWithEmail, signUpWithEmail, loginWithGoogle } from './js/auth.js';
-
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const googleLoginBtn = document.getElementById('googleLoginBtn');
-        const googleBtnText = document.getElementById('googleBtnText');
-        const errorBox = document.getElementById('errorBox');
-        const authSubtitle = document.getElementById('authSubtitle');
-        const toggleAuth = document.getElementById('toggleAuth');
-        const toggleText = document.getElementById('toggleText');
-        const privacyBanner = document.getElementById('privacyBanner');
-        const acceptPrivacy = document.getElementById('acceptPrivacy');
-
-        let isSignUp = false;
-
-        // Check for privacy consent in localStorage
-        if (!localStorage.getItem('privacy_consent')) {
-            privacyBanner.style.display = 'flex';
-        }
-
-        acceptPrivacy.onclick = () => {
-            localStorage.setItem('privacy_consent', 'true');
-            privacyBanner.style.display = 'none';
-        };
-
-        toggleAuth.onclick = (e) => {
-            e.preventDefault();
-            isSignUp = !isSignUp;
-
-            if (isSignUp) {
-                authSubtitle.innerText = 'Create an account for access';
-                loginBtn.innerText = 'Sign Up';
-                toggleText.innerText = 'Already have an account?';
-                toggleAuth.innerText = 'Sign In';
-                googleBtnText.innerText = 'Sign Up with Google';
-            } else {
-                authSubtitle.innerText = 'Login for access';
-                loginBtn.innerText = 'Sign In';
-                toggleText.innerText = "Don't have an account?";
-                toggleAuth.innerText = 'Sign Up';
-                googleBtnText.innerText = 'Google Account';
-            }
-            errorBox.style.display = 'none';
-        };
-
-        loginForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            loginBtn.innerText = isSignUp ? 'Creating account...' : 'Signing in...';
-            loginBtn.disabled = true;
-            errorBox.style.display = 'none';
-
-            try {
-                if (isSignUp) {
-                    await signUpWithEmail(email, password);
-                } else {
-                    await loginWithEmail(email, password);
-                }
-            } catch (error) {
-                console.error(error);
-                errorBox.innerText = error.message.includes('email-already-in-use')
-                    ? 'Email already in use. Try signing in.'
-                    : 'Authentication failed. Please check your credentials.';
-                errorBox.style.display = 'block';
-                loginBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
-                loginBtn.disabled = false;
-            }
-        };
-
-        googleLoginBtn.onclick = async () => {
-            try {
-                await loginWithGoogle();
-            } catch (error) {
-                console.error(error);
-                errorBox.innerText = 'Google authentication failed. Try again.';
-                errorBox.style.display = 'block';
-            }
-        };
-    </script>
 </body>
 
 </html>
