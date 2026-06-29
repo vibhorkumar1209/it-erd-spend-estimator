@@ -44,24 +44,36 @@ app.get('/api/revenue', async (req, res) => {
         const industryText = industry ? ` in the ${industry} industry` : '';
         const countryText = country ? `, headquartered in ${country}` : '';
         
-        const prompt = `What is the latest annual revenue (i.e. 2024/2025 revenue) of ${companyName}${domainText}${industryText}${countryText} in USD? Please provide ONLY the numerical value in millions of USD (e.g., if it's $1.5 billion, return 1500. If it's $500 million, return 500). Do not include any text, symbols like $ or commas. Just the number. If you are unsure, just return a reasonable estimate and only the number.`;
+        const prompt = `You are a financial data API. Return the latest annual revenue (2024/2025) of ${companyName}${domainText}${industryText}${countryText} in USD.
+Respond ONLY with a valid JSON object in this exact format:
+{ "revenue_in_millions": 1500 }
+If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million, the value should be 500.
+Do not include markdown blocks or any other text, just the raw JSON object.`;
         
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }]
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json"
+                }
             })
         });
 
         const data = await geminiRes.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
         
-        // Extract just the number
-        const revenueNum = parseFloat(text.replace(/[^0-9.]/g, ''));
+        let revenueNum: number;
+        try {
+            const parsed = JSON.parse(text);
+            revenueNum = parsed.revenue_in_millions;
+        } catch (e) {
+            return res.status(500).json({ error: 'Failed to parse JSON response from Gemini', raw: text });
+        }
         
-        if (isNaN(revenueNum)) {
-             return res.status(500).json({ error: 'Could not parse revenue', raw: text });
+        if (typeof revenueNum !== 'number' || isNaN(revenueNum)) {
+             return res.status(500).json({ error: 'Could not extract numerical revenue', raw: text });
         }
 
         res.json({ revenue: revenueNum });
