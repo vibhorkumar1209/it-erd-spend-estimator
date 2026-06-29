@@ -74,18 +74,27 @@ function App() {
         return calculateSpend(companyName, revInUSD, industry, country);
     }, [companyName, revenue, industry, country, currentRate]);
 
-    const lastFetched = React.useRef({ companyName: '', companyDomain: '' });
+    const lastFetched = React.useRef({ companyName: '', companyDomain: '', industry: '', country: '' });
 
     const fetchRevenue = async () => {
         if (!companyName) return;
         // Prevent redundant calls if nothing changed
-        if (lastFetched.current.companyName === companyName && lastFetched.current.companyDomain === companyDomain) return;
+        if (lastFetched.current.companyName === companyName && 
+            lastFetched.current.companyDomain === companyDomain &&
+            lastFetched.current.industry === industry &&
+            lastFetched.current.country === country) return;
         
         setIsFetchingRevenue(true);
         try {
             let usdRevenue = 0;
             
-            const res = await fetch(`/api/revenue?companyName=${encodeURIComponent(companyName)}&companyDomain=${encodeURIComponent(companyDomain)}`);
+            const queryParams = new URLSearchParams({
+                companyName,
+                companyDomain,
+                industry,
+                country
+            });
+            const res = await fetch(`/api/revenue?${queryParams.toString()}`);
             if (res.ok) {
                 const data = await res.json();
                 usdRevenue = data.revenue;
@@ -96,7 +105,7 @@ function App() {
             
             const localRev = usdRevenue * currentRate;
             setRevenue(localRev.toFixed(0));
-            lastFetched.current = { companyName, companyDomain };
+            lastFetched.current = { companyName, companyDomain, industry, country };
             
         } catch (error) {
             console.error('Failed to fetch revenue:', error);
@@ -322,6 +331,7 @@ function App() {
                                 </label>
                                 <select
                                     value={industry} onChange={(e) => setIndustry(e.target.value)}
+                                    onBlur={fetchRevenue}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {industries.map(ind => <option key={ind} value={ind} className="bg-[#020617]">{ind}</option>)}
@@ -329,10 +339,11 @@ function App() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                    <Globe className="w-3 h-3" /> Region / Country
+                                    <Globe className="w-3 h-3" /> HQ Location (Geography)
                                 </label>
                                 <select
-                                    value={country} onChange={(e) => setCountry(e.target.value)}
+                                    value={country} onChange={(e) => { setCountry(e.target.value); }}
+                                    onBlur={fetchRevenue}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {countries.map(c => <option key={c} value={c} className="bg-[#020617]">{c}</option>)}

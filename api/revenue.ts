@@ -9,6 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const companyName = req.query.companyName;
     const companyDomain = req.query.companyDomain || '';
+    const industry = req.query.industry || '';
+    const country = req.query.country || '';
     if (!companyName) {
         return res.status(400).json({ error: 'Missing companyName query parameter' });
     }
@@ -20,7 +22,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     try {
         const domainText = companyDomain ? ` (website/domain: ${companyDomain})` : '';
-        const prompt = `What is the latest annual revenue of ${companyName}${domainText} in USD? Please provide ONLY the numerical value in millions of USD (e.g., if it's $1.5 billion, return 1500. If it's $500 million, return 500). Do not include any text, symbols like $ or commas. Just the number. If you are unsure, just return a reasonable estimate and only the number.`;
+        const industryText = industry ? ` in the ${industry} industry` : '';
+        const countryText = country ? `, headquartered in ${country}` : '';
+        
+        const prompt = `What is the latest annual revenue (i.e. 2024/2025 revenue) of ${companyName}${domainText}${industryText}${countryText} in USD? Please provide ONLY the numerical value in millions of USD (e.g., if it's $1.5 billion, return 1500. If it's $500 million, return 500). Do not include any text, symbols like $ or commas. Just the number. If you are unsure, just return a reasonable estimate and only the number.`;
         
         const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
