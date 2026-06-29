@@ -89,26 +89,9 @@ function App() {
             if (res.ok) {
                 const data = await res.json();
                 usdRevenue = data.revenue;
-            } else {
-                const apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY;
-                if (!apiKey) {
-                    throw new Error('GEMINI_API_KEY not configured on server or client');
-                }
-                const domainText = companyDomain ? ` (website/domain: ${companyDomain})` : '';
-                const prompt = `What is the latest annual revenue of ${companyName}${domainText} in USD? Please provide ONLY the numerical value in millions of USD (e.g., if it's $1.5 billion, return 1500. If it's $500 million, return 500). Do not include any text, symbols like $ or commas. Just the number. If you are unsure, just return a reasonable estimate and only the number.`;
-                
-                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
-                });
-                
-                const data = await geminiRes.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-                usdRevenue = parseFloat(text.replace(/[^0-9.]/g, ''));
-                if (isNaN(usdRevenue)) throw new Error('Failed to parse Gemini response');
+                // The fallback has been removed to prevent leaking the API Key into the frontend bundle.
+                // Ensure the GEMINI_API_KEY is configured in your Vercel Dashboard Environment Variables.
+                throw new Error('Backend /api/revenue endpoint failed or is not available.');
             }
             
             const localRev = usdRevenue * currentRate;
