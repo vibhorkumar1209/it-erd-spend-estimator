@@ -76,10 +76,11 @@ function App() {
 
     const lastFetched = React.useRef({ companyName: '', companyDomain: '', industry: '', country: '' });
 
-    const fetchRevenue = async () => {
+    const fetchRevenue = async (force: boolean = false) => {
         if (!companyName) return;
-        // Prevent redundant calls if nothing changed
-        if (lastFetched.current.companyName === companyName && 
+        // Prevent redundant calls if nothing changed and not forced
+        if (!force &&
+            lastFetched.current.companyName === companyName && 
             lastFetched.current.companyDomain === companyDomain &&
             lastFetched.current.industry === industry &&
             lastFetched.current.country === country) return;
@@ -107,10 +108,9 @@ function App() {
             setRevenue(localRev.toFixed(0));
             lastFetched.current = { companyName, companyDomain, industry, country };
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to fetch revenue:', error);
-            // Optionally could alert or just silently fail on automatic fetch
-            // alert('Could not fetch revenue using Gemini API. Please enter manually or check API keys.');
+            alert(`Failed to fetch revenue: ${error.message}\nMake sure you are on the Vercel live link and GEMINI_API_KEY is configured.`);
         } finally {
             setIsFetchingRevenue(false);
         }
@@ -275,7 +275,8 @@ function App() {
                                 </label>
                                 <input
                                     type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-                                    onBlur={fetchRevenue}
+                                    onBlur={() => fetchRevenue()}
+                                    placeholder="e.g. General Motors"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
                                 />
                             </div>
@@ -285,7 +286,7 @@ function App() {
                                 </label>
                                 <input
                                     type="text" value={companyDomain} onChange={(e) => setCompanyDomain(e.target.value)}
-                                    onBlur={fetchRevenue}
+                                    onBlur={() => fetchRevenue()}
                                     placeholder="e.g. gm.com"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
                                 />
@@ -307,7 +308,7 @@ function App() {
                                         <DollarSign className="w-3 h-3" /> Latest Revenue (in {currency}, M)
                                     </div>
                                     <button 
-                                        onClick={fetchRevenue} 
+                                        onClick={() => fetchRevenue(true)} 
                                         disabled={isFetchingRevenue}
                                         className="text-[9px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-600/40 transition-colors disabled:opacity-50 flex items-center gap-1">
                                         <Sparkles className="w-3 h-3" /> {isFetchingRevenue ? 'Searching...' : 'Search Gemini'}
@@ -331,7 +332,7 @@ function App() {
                                 </label>
                                 <select
                                     value={industry} onChange={(e) => setIndustry(e.target.value)}
-                                    onBlur={fetchRevenue}
+                                    onBlur={() => fetchRevenue()}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {industries.map(ind => <option key={ind} value={ind} className="bg-[#020617]">{ind}</option>)}
@@ -343,7 +344,7 @@ function App() {
                                 </label>
                                 <select
                                     value={country} onChange={(e) => { setCountry(e.target.value); }}
-                                    onBlur={fetchRevenue}
+                                    onBlur={() => fetchRevenue()}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {countries.map(c => <option key={c} value={c} className="bg-[#020617]">{c}</option>)}
