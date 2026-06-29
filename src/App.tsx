@@ -33,6 +33,7 @@ function formatCurrency(valueMillion: number, currencyCode: string = 'USD'): str
 
 function App() {
     const [companyName, setCompanyName] = useState<string>('General Motors');
+    const [companyDomain, setCompanyDomain] = useState<string>('gm.com');
     const [revenue, setRevenue] = useState<string>('187440');
     const [industry, setIndustry] = useState<string>('Automotive');
     const [country, setCountry] = useState<string>('USA');
@@ -45,6 +46,7 @@ function App() {
     const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({ 'USD': 1 });
     const [exchangeDate, setExchangeDate] = useState<string>('');
     const [isRatesLoading, setIsRatesLoading] = useState<boolean>(true);
+    const [isFetchingRevenue, setIsFetchingRevenue] = useState(false);
 
     useEffect(() => {
         setIsRatesLoading(true);
@@ -71,6 +73,56 @@ function App() {
         const revInUSD = localRev / currentRate;
         return calculateSpend(companyName, revInUSD, industry, country);
     }, [companyName, revenue, industry, country, currentRate]);
+
+    const lastFetched = React.useRef({ companyName: '', companyDomain: '' });
+
+    const fetchRevenue = async () => {
+        if (!companyName) return;
+        // Prevent redundant calls if nothing changed
+        if (lastFetched.current.companyName === companyName && lastFetched.current.companyDomain === companyDomain) return;
+        
+        setIsFetchingRevenue(true);
+        try {
+            let usdRevenue = 0;
+            
+            const res = await fetch(`/api/revenue?companyName=${encodeURIComponent(companyName)}&companyDomain=${encodeURIComponent(companyDomain)}`);
+            if (res.ok) {
+                const data = await res.json();
+                usdRevenue = data.revenue;
+            } else {
+                const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+                if (!apiKey) {
+                    throw new Error('GEMINI_API_KEY not configured on server or client');
+                }
+                const domainText = companyDomain ? ` (website/domain: ${companyDomain})` : '';
+                const prompt = `What is the latest annual revenue of ${companyName}${domainText} in USD? Please provide ONLY the numerical value in millions of USD (e.g., if it's $1.5 billion, return 1500. If it's $500 million, return 500). Do not include any text, symbols like $ or commas. Just the number. If you are unsure, just return a reasonable estimate and only the number.`;
+                
+                const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+                
+                const data = await geminiRes.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+                usdRevenue = parseFloat(text.replace(/[^0-9.]/g, ''));
+                if (isNaN(usdRevenue)) throw new Error('Failed to parse Gemini response');
+            }
+            
+            const localRev = usdRevenue * currentRate;
+            setRevenue(localRev.toFixed(0));
+            lastFetched.current = { companyName, companyDomain };
+            
+        } catch (error) {
+            console.error('Failed to fetch revenue:', error);
+            // Optionally could alert or just silently fail on automatic fetch
+            // alert('Could not fetch revenue using Gemini API. Please enter manually or check API keys.');
+        } finally {
+            setIsFetchingRevenue(false);
+        }
+    };
 
     // Helper: convert a USD spend value back to the selected local currency for display
     const toLocal = (usdValue: number) => usdValue * currentRate;
@@ -231,6 +283,18 @@ function App() {
                                 </label>
                                 <input
                                     type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
+                                    onBlur={fetchRevenue}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <Globe className="w-3 h-3" /> Company Domain
+                                </label>
+                                <input
+                                    type="text" value={companyDomain} onChange={(e) => setCompanyDomain(e.target.value)}
+                                    onBlur={fetchRevenue}
+                                    placeholder="e.g. gm.com"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
                                 />
                             </div>
@@ -246,12 +310,21 @@ function App() {
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                    <DollarSign className="w-3 h-3" /> 2025 Revenue (in selected currency, M)
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <DollarSign className="w-3 h-3" /> Latest Revenue (in {currency}, M)
+                                    </div>
+                                    <button 
+                                        onClick={fetchRevenue} 
+                                        disabled={isFetchingRevenue}
+                                        className="text-[9px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-600/40 transition-colors disabled:opacity-50 flex items-center gap-1">
+                                        <Sparkles className="w-3 h-3" /> {isFetchingRevenue ? 'Searching...' : 'Search Gemini'}
+                                    </button>
                                 </label>
                                 <input
                                     type="text" value={revenue} onChange={(e) => setRevenue(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
+                                    placeholder="Click Search Gemini or enter value"
                                 />
                                 {currency !== 'USD' && !isRatesLoading && (
                                     <p className="text-[10px] text-zinc-500 font-mono mt-1">

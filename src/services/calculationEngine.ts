@@ -136,21 +136,21 @@ export const calculateSpend = (
     };
 
     const val2022_IT = trends.find(t => t.year === 2022)?.itSpend || 0;
-    const val2024_IT = trends.find(t => t.year === 2024)?.itSpend || 0;
+    const val2025_IT = trends.find(t => t.year === 2025)?.itSpend || 0;
     const val2030_IT = trends.find(t => t.year === 2030)?.itSpend || 0;
 
     const val2022_ERD = trends.find(t => t.year === 2022)?.erdSpend || 0;
-    const val2024_ERD = trends.find(t => t.year === 2024)?.erdSpend || 0;
+    const val2025_ERD = trends.find(t => t.year === 2025)?.erdSpend || 0;
     const val2030_ERD = trends.find(t => t.year === 2030)?.erdSpend || 0;
 
-    const itCAGR_Hist = getCAGR(val2022_IT, val2024_IT, 2);
-    const itCAGR_Fore = getCAGR(val2024_IT, val2030_IT, 6);
-    const erdCAGR_Hist = getCAGR(val2022_ERD, val2024_ERD, 2);
-    const erdCAGR_Fore = getCAGR(val2024_ERD, val2030_ERD, 6);
+    const itCAGR_Hist = getCAGR(val2022_IT, val2025_IT, 3);
+    const itCAGR_Fore = getCAGR(val2025_IT, val2030_IT, 5);
+    const erdCAGR_Hist = getCAGR(val2022_ERD, val2025_ERD, 3);
+    const erdCAGR_Fore = getCAGR(val2025_ERD, val2030_ERD, 5);
 
     // Completely rely on the natively structured 2026 data from data.json
-    const baselineIT = trends.find(t => t.year === 2026)?.itSpend || val2024_IT;
-    const baselineERD = trends.find(t => t.year === 2026)?.erdSpend || val2024_ERD;
+    const baselineIT = trends.find(t => t.year === 2026)?.itSpend || val2025_IT;
+    const baselineERD = trends.find(t => t.year === 2026)?.erdSpend || val2025_ERD;
 
     const itBreakdown: BreakdownItem[] = [];
     const itIndustryData = data.it_breakdown[industry];

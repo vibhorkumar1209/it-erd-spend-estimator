@@ -1,35 +1,14 @@
-import express from 'express';
-import cors from 'cors';
-import { calculateSpend, getIndustries, getCountries } from './src/services/calculationEngine';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const app = express();
-app.use(cors());
-app.use(express.json());
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-// Load environment variables for Gemini API key if needed
-import { config } from 'dotenv';
-config();
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
-const PORT = process.env.PORT || 3000;
-
-app.post('/api/calculate', (req, res) => {
-    const { companyName, revenue, industry, country } = req.body;
-
-    if (!companyName || !revenue || !industry || !country) {
-        return res.status(400).json({ error: 'Missing required parameters (companyName, revenue, industry, country)' });
-    }
-
-    try {
-        const result = calculateSpend(companyName, Number(revenue), industry, country);
-        res.json(result);
-    } catch (error) {
-        console.error('Calculation error:', error);
-        res.status(500).json({ error: 'Internal server error during calculation' });
-    }
-});
-
-app.get('/api/revenue', async (req, res) => {
-    const { companyName, companyDomain } = req.query;
+    const companyName = req.query.companyName;
+    const companyDomain = req.query.companyDomain || '';
     if (!companyName) {
         return res.status(400).json({ error: 'Missing companyName query parameter' });
     }
@@ -61,25 +40,9 @@ app.get('/api/revenue', async (req, res) => {
              return res.status(500).json({ error: 'Could not parse revenue', raw: text });
         }
 
-        res.json({ revenue: revenueNum });
+        res.status(200).json({ revenue: revenueNum });
     } catch (error: any) {
         console.error('Gemini API error:', error);
         res.status(500).json({ error: 'Failed to fetch from Gemini', message: error.message });
     }
-});
-
-app.get('/api/industries', (req, res) => {
-    res.json({ industries: getIndustries() });
-});
-
-app.get('/api/countries', (req, res) => {
-    res.json({ countries: getCountries() });
-});
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`\n--- Example API Usage ---`);
-    console.log(`curl -X POST http://localhost:${PORT}/api/calculate \\
-  -H "Content-Type: application/json" \\
-  -d '{"companyName": "Tech Corp", "revenue": 1000, "industry": "Software", "country": "Norway"}'`);
-});
+}
