@@ -33,7 +33,6 @@ function formatCurrency(valueMillion: number, currencyCode: string = 'USD'): str
 
 function App() {
     const [companyName, setCompanyName] = useState<string>('General Motors');
-    const [companyDomain, setCompanyDomain] = useState<string>('gm.com');
     const [revenue, setRevenue] = useState<string>('187440');
     const [industry, setIndustry] = useState<string>('Automotive');
     const [country, setCountry] = useState<string>('USA');
@@ -46,7 +45,6 @@ function App() {
     const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({ 'USD': 1 });
     const [exchangeDate, setExchangeDate] = useState<string>('');
     const [isRatesLoading, setIsRatesLoading] = useState<boolean>(true);
-    const [isFetchingRevenue, setIsFetchingRevenue] = useState(false);
 
     useEffect(() => {
         setIsRatesLoading(true);
@@ -73,74 +71,6 @@ function App() {
         const revInUSD = localRev / currentRate;
         return calculateSpend(companyName, revInUSD, industry, country);
     }, [companyName, revenue, industry, country, currentRate]);
-
-    const lastFetched = React.useRef({ companyName: '', companyDomain: '', industry: '', country: '' });
-
-    const fetchRevenue = async (force: boolean = false) => {
-        if (!companyName) return;
-        // Prevent redundant calls if nothing changed and not forced
-        if (!force &&
-            lastFetched.current.companyName === companyName && 
-            lastFetched.current.companyDomain === companyDomain &&
-            lastFetched.current.industry === industry &&
-            lastFetched.current.country === country) return;
-        
-        setIsFetchingRevenue(true);
-        try {
-            let usdRevenue = 0;
-            // Re-implementing direct fetch with obfuscated key to support GitHub Pages
-            // Obfuscated to bypass GitHub secret scanner blocking
-            const p1 = "AQ.Ab8RN6JN3XR6";
-            const p2 = "9mnuAcrESV5sTY_";
-            const p3 = "8JA-1IgTw8OVFA8X-ftzSpg";
-            const apiKey = p1 + p2 + p3;
-            
-            const domainText = companyDomain ? ` (domain: ${companyDomain})` : '';
-            const industryText = industry ? ` (hint: ${industry} industry)` : '';
-            const countryText = country ? ` (hint: headquartered in ${country})` : '';
-            
-            const prompt = `You are a financial data API. Return the latest annual revenue (2024/2025) of ${companyName}${domainText}${industryText}${countryText} in USD. Note that the industry and HQ hints might be slightly inaccurate, but focus on the company name and domain to identify it.
-Respond ONLY with a valid JSON object in this exact format:
-{ "revenue_in_millions": 1500 }
-If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million, the value should be 500. If you cannot find the revenue, estimate it or provide the most recent available data. You MUST return a number, never null. Do not include markdown blocks or any other text, just the raw JSON object.`;
-
-            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: "application/json"
-                    }
-                })
-            });
-
-            if (!geminiRes.ok) {
-                throw new Error(`Gemini API Error: ${geminiRes.status}`);
-            }
-
-            const data = await geminiRes.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '{}';
-            const parsed = JSON.parse(text);
-            const revenueNum = Number(parsed.revenue_in_millions);
-            
-            if (typeof revenueNum !== 'number' || isNaN(revenueNum)) {
-                throw new Error('Failed to parse numerical revenue from Gemini response');
-            }
-            
-            usdRevenue = revenueNum;
-            
-            const localRev = usdRevenue * currentRate;
-            setRevenue(localRev.toFixed(0));
-            lastFetched.current = { companyName, companyDomain, industry, country };
-            
-        } catch (error: any) {
-            console.error('Failed to fetch revenue:', error);
-            alert(`Failed to fetch revenue: ${error.message}\nMake sure you are on the Vercel live link and GEMINI_API_KEY is configured.`);
-        } finally {
-            setIsFetchingRevenue(false);
-        }
-    };
 
     // Helper: convert a USD spend value back to the selected local currency for display
     const toLocal = (usdValue: number) => usdValue * currentRate;
@@ -301,19 +231,6 @@ If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million
                                 </label>
                                 <input
                                     type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)}
-                                    onBlur={() => fetchRevenue()}
-                                    placeholder="e.g. General Motors"
-                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                    <Globe className="w-3 h-3" /> Company Domain
-                                </label>
-                                <input
-                                    type="text" value={companyDomain} onChange={(e) => setCompanyDomain(e.target.value)}
-                                    onBlur={() => fetchRevenue()}
-                                    placeholder="e.g. gm.com"
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
                                 />
                             </div>
@@ -329,21 +246,12 @@ If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2 justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <DollarSign className="w-3 h-3" /> Latest Revenue (in {currency}, M)
-                                    </div>
-                                    <button 
-                                        onClick={() => fetchRevenue(true)} 
-                                        disabled={isFetchingRevenue}
-                                        className="text-[9px] bg-blue-600/20 text-blue-400 px-2 py-1 rounded hover:bg-blue-600/40 transition-colors disabled:opacity-50 flex items-center gap-1">
-                                        <Sparkles className="w-3 h-3" /> {isFetchingRevenue ? 'Searching...' : 'Search Gemini'}
-                                    </button>
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <DollarSign className="w-3 h-3" /> 2025 Revenue (in selected currency, M)
                                 </label>
                                 <input
                                     type="text" value={revenue} onChange={(e) => setRevenue(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
-                                    placeholder="Click Search Gemini or enter value"
                                 />
                                 {currency !== 'USD' && !isRatesLoading && (
                                     <p className="text-[10px] text-zinc-500 font-mono mt-1">
@@ -358,7 +266,6 @@ If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million
                                 </label>
                                 <select
                                     value={industry} onChange={(e) => setIndustry(e.target.value)}
-                                    onBlur={() => fetchRevenue()}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {industries.map(ind => <option key={ind} value={ind} className="bg-[#020617]">{ind}</option>)}
@@ -366,11 +273,10 @@ If the revenue is 1.5 billion USD, the value should be 1500. If it's 500 million
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                                    <Globe className="w-3 h-3" /> HQ Location (Geography)
+                                    <Globe className="w-3 h-3" /> Region / Country
                                 </label>
                                 <select
-                                    value={country} onChange={(e) => { setCountry(e.target.value); }}
-                                    onBlur={() => fetchRevenue()}
+                                    value={country} onChange={(e) => setCountry(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 appearance-none cursor-pointer"
                                 >
                                     {countries.map(c => <option key={c} value={c} className="bg-[#020617]">{c}</option>)}
