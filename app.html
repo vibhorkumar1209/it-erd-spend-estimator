@@ -51,7 +51,10 @@
             }
         });
 
-        document.getElementById('logoutBtn').onclick = logout;
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.onclick = logout;
+        }
     </script>
 
     <!-- 

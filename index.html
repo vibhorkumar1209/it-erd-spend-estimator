@@ -128,7 +128,7 @@
                 console.error(error);
                 errorBox.innerText = error.message.includes('email-already-in-use')
                     ? 'Email already in use. Try signing in.'
-                    : 'Authentication failed. Please check your credentials.';
+                    : `Authentication failed: ${error.message}`;
                 errorBox.style.display = 'block';
                 loginBtn.innerText = isSignUp ? 'Sign Up' : 'Sign In';
                 loginBtn.disabled = false;
@@ -140,7 +140,7 @@
                 await loginWithGoogle();
             } catch (error) {
                 console.error(error);
-                errorBox.innerText = 'Google authentication failed. Try again.';
+                errorBox.innerText = `Google authentication failed: ${error.message}`;
                 errorBox.style.display = 'block';
             }
         };
