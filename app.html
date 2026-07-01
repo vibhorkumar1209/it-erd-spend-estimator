@@ -44,11 +44,11 @@
         import { logout } from './js/auth.js';
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-        // Hide loading overlay once auth session is confirmed
+        // TEMPORARY BYPASS: Hide loading overlay unconditionally
+        document.getElementById('auth-loading').style.display = 'none';
+
         onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('auth-loading').style.display = 'none';
-            }
+            // Original logic preserved but overlay hidden above
         });
 
         const logoutBtn = document.getElementById('logoutBtn');

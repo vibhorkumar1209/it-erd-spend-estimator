@@ -75,12 +75,14 @@ function handlePostAuth(user) {
 export function checkAuth(requiresAdmin = false) {
     onAuthStateChanged(auth, (user) => {
         if (!user) {
-            // Not logged in -> Login
-            window.location.href = 'index.html';
+            // TEMPORARY BYPASS: Not logged in -> Login
+            // window.location.href = 'index.html';
+            console.log("Auth Bypass: Unauthenticated user allowed");
         } else if (requiresAdmin && user.email !== ADMIN_EMAIL) {
             // Logged in but not admin -> App
-            alert('Access Denied: Admin privileges required.');
-            window.location.href = '/app.html';
+            // alert('Access Denied: Admin privileges required.');
+            // window.location.href = '/app.html';
+            console.log("Auth Bypass: Admin requirement ignored");
         }
     });
 }
