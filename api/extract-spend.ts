@@ -20,7 +20,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: 'Server configuration error (missing API key).' });
     }
 
-    const prompt = `You are an expert financial analyst and corporate intelligence researcher. Your task is to extract three specific metrics for ${companyName} and ${companyName} OR ${geo || 'Global'} for the most recent fiscal year: IT Spend/Budget, R&D Spend/Budget, and AI Spend/Budget.
+    const prompt = `You are an expert financial analyst and corporate intelligence researcher. Your task is to extract three specific metrics for ${companyName} and ${companyName} OR ${geo || 'Global'}.
+Specifically, you must look for the projected or announced budget for the upcoming fiscal year 2026 (or the most recent forward-looking strategic budget explicitly announced).
+
+The three metrics to extract are: IT Spend/Budget, R&D Spend/Budget, and AI Spend/Budget.
 
 CRITICAL CONSTRAINT: You must only report these values if they are explicitly published by the company itself or by a top-tier analyst firm. Do not estimate, guess, or extrapolate.
 
