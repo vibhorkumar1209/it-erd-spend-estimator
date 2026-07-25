@@ -65,6 +65,7 @@ Company Domain context: ${companyDomain ? companyDomain : 'Not provided'}`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
+                tools: [{ googleSearch: {} }],
                 generationConfig: {
                     responseMimeType: "application/json"
                 }
