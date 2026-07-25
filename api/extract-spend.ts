@@ -32,7 +32,7 @@ CRITICAL CONSTRAINT: You must only report these values if they are explicitly pu
 - Top-tier analyst firms (e.g., Gartner, IDC, Forrester, Everest Group).
 
 2. DATA CATEGORIES TO EXTRACT:
-- IT Spend/Budget: The total annual corporate spend on information technology, software, cloud infrastructure, and digital systems.
+- IT Spend/Budget: The total overall annual corporate spend on information technology, software, cloud infrastructure, and digital systems. CRITICAL: This is the GROSS total technology budget. DO NOT subtract AI or R&D spend from this number. (e.g., if total tech budget is $20B and AI is $2B, report IT Spend as 20000).
 - R&D Spend/Budget: The total annual expense allocated to Research, Development, and Product Engineering.
 - AI Spend/Budget: The specific subset of budget allocated to Artificial Intelligence, Machine Learning, or generative AI initiatives.
 
