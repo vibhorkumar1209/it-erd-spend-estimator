@@ -79,6 +79,9 @@ export const calculateSpend = (
     revenue: number,
     industry: string,
     country: string,
+    overrideIT?: number | null,
+    overrideERD?: number | null,
+    overrideAI?: number | null,
 ): SpendBreakdown => {
     const region = data.countries[country] || 'ROW2';
     const regionAdj = data.lookups.region_adj[region] || 0;
@@ -92,6 +95,27 @@ export const calculateSpend = (
 
     const revenueAdj = data.lookups.revenue_adj[revenueTier] || 0;
 
+    let itMultiplier = 1;
+    let erdMultiplier = 1;
+
+    // Use 2026 as the anchor year for overrides
+    const anchorYear = 2026;
+    const anchorItBase = (data.multiyear.it[industry]?.[anchorYear] || 0) / 100;
+    const anchorErdBase = (data.multiyear.erd[industry]?.[anchorYear] || 0) / 100;
+    
+    const anchorItFinal = anchorItBase * (1 + regionAdj) * (1 + revenueAdj);
+    const anchorErdFinal = anchorErdBase * (1 + regionAdj) * (1 + revenueAdj);
+    
+    const baseAnchorItSpend = revenue * anchorItFinal;
+    const baseAnchorErdSpend = revenue * anchorErdFinal;
+
+    if (overrideIT !== undefined && overrideIT !== null && baseAnchorItSpend > 0) {
+        itMultiplier = overrideIT / baseAnchorItSpend;
+    }
+    if (overrideERD !== undefined && overrideERD !== null && baseAnchorErdSpend > 0) {
+        erdMultiplier = overrideERD / baseAnchorErdSpend;
+    }
+
     const years = Object.keys(data.multiyear.it[industry] || {}).map(Number).sort((a, b) => a - b);
     const trends: YearlyEstimate[] = years.map((year, index) => {
         const itBase = (data.multiyear.it[industry]?.[year] || 0) / 100;
@@ -100,8 +124,8 @@ export const calculateSpend = (
         const itFinal = itBase * (1 + regionAdj) * (1 + revenueAdj);
         const erdFinal = erdBase * (1 + regionAdj) * (1 + revenueAdj);
 
-        const itSpend = revenue * itFinal;
-        const erdSpend = revenue * erdFinal;
+        const itSpend = revenue * itFinal * itMultiplier;
+        const erdSpend = revenue * erdFinal * erdMultiplier;
 
         let itYoY = 0;
         let erdYoY = 0;
@@ -112,8 +136,8 @@ export const calculateSpend = (
             const prevErdBase = (data.multiyear.erd[industry]?.[prevYear] || 0) / 100;
             const prevItFinal = prevItBase * (1 + regionAdj) * (1 + revenueAdj);
             const prevErdFinal = prevErdBase * (1 + regionAdj) * (1 + revenueAdj);
-            const prevItSpend = revenue * prevItFinal;
-            const prevErdSpend = revenue * prevErdFinal;
+            const prevItSpend = revenue * prevItFinal * itMultiplier;
+            const prevErdSpend = revenue * prevErdFinal * erdMultiplier;
 
             if (prevItSpend > 0) itYoY = ((itSpend / prevItSpend) - 1) * 100;
             if (prevErdSpend > 0) erdYoY = ((erdSpend / prevErdSpend) - 1) * 100;
@@ -207,9 +231,15 @@ export const calculateSpend = (
         const etAdjTotal = baseWeight * (1 + rAdj) * (1 + revAdj);
 
         // Exceptional logic: AI/ML inherits from ERD for ERD-heavy industries
-        if (name === 'AI (ML/DL/GenAI & Safety)' && erdHeavyIndustries.includes(industry)) {
-            const aiErdBreakdown = erdBreakdown.find(b => b.id === 'AI/ML & Data Engineering');
-            etValue = aiErdBreakdown ? aiErdBreakdown.value : 0;
+        if (name === 'AI (ML/DL/GenAI & Safety)') {
+            if (overrideAI !== undefined && overrideAI !== null) {
+                etValue = overrideAI;
+            } else if (erdHeavyIndustries.includes(industry)) {
+                const aiErdBreakdown = erdBreakdown.find(b => b.id === 'AI/ML & Data Engineering');
+                etValue = aiErdBreakdown ? aiErdBreakdown.value : 0;
+            } else {
+                etValue = baselineIT * etAdjTotal;
+            }
             // Blockchain always references IT Spend by Category (Digital Enterprise > Blockchain)
         } else if (name === 'Blockchain') {
             let blockchainIT = 0;

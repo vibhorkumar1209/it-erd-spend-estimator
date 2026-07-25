@@ -33,6 +33,13 @@ function formatCurrency(valueMillion: number, currencyCode: string = 'USD'): str
 
 function App() {
     const [companyName, setCompanyName] = useState<string>('General Motors');
+    const [companyDomain, setCompanyDomain] = useState<string>('');
+    const [geo, setGeo] = useState<string>('');
+    const [overrideIT, setOverrideIT] = useState<number | null>(null);
+    const [overrideERD, setOverrideERD] = useState<number | null>(null);
+    const [overrideAI, setOverrideAI] = useState<number | null>(null);
+    const [extractedData, setExtractedData] = useState<any>(null);
+    const [isExtracting, setIsExtracting] = useState<boolean>(false);
     const [revenue, setRevenue] = useState<string>('187440');
     const [industry, setIndustry] = useState<string>('Automotive');
     const [country, setCountry] = useState<string>('USA');
@@ -63,14 +70,35 @@ function App() {
 
     const currentRate = exchangeRates[currency] || 1;
 
+    const handleExtract = async () => {
+        setIsExtracting(true);
+        try {
+            const res = await fetch('/api/extract-spend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ companyName, companyDomain, geo: geo || country })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setExtractedData(data);
+                if (data.it_spend?.value) setOverrideIT(data.it_spend.value);
+                if (data.rd_spend?.value) setOverrideERD(data.rd_spend.value);
+                if (data.ai_spend?.value) setOverrideAI(data.ai_spend.value);
+            }
+        } catch (err) {
+            console.error('Failed to extract data:', err);
+        }
+        setIsExtracting(false);
+    };
+
     const industries = useMemo(() => getIndustries(), []);
     const countries = useMemo(() => getCountries(), []);
 
     const results = useMemo(() => {
         const localRev = parseFloat(revenue) || 0;
         const revInUSD = localRev / currentRate;
-        return calculateSpend(companyName, revInUSD, industry, country);
-    }, [companyName, revenue, industry, country, currentRate]);
+        return calculateSpend(companyName, revInUSD, industry, country, overrideIT, overrideERD, overrideAI);
+    }, [companyName, revenue, industry, country, currentRate, overrideIT, overrideERD, overrideAI]);
 
     // Helper: convert a USD spend value back to the selected local currency for display
     const toLocal = (usdValue: number) => usdValue * currentRate;
@@ -236,6 +264,24 @@ function App() {
                             </div>
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <Globe className="w-3 h-3" /> Company Domain
+                                </label>
+                                <input
+                                    type="text" value={companyDomain} onChange={(e) => setCompanyDomain(e.target.value)} placeholder="e.g. gm.com"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                                    <Globe className="w-3 h-3" /> Geo
+                                </label>
+                                <input
+                                    type="text" value={geo} onChange={(e) => setGeo(e.target.value)} placeholder="e.g. North America, Global"
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white outline-none focus:border-blue-500/50 transition-all"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
                                     <DollarSign className="w-3 h-3" /> Currency
                                 </label>
                                 <select
@@ -282,6 +328,14 @@ function App() {
                                     {countries.map(c => <option key={c} value={c} className="bg-[#020617]">{c}</option>)}
                                 </select>
                             </div>
+                            <button 
+                                onClick={handleExtract}
+                                disabled={isExtracting}
+                                className="w-full px-6 py-3 mt-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-50 text-white text-[11px] font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/20 flex items-center justify-center gap-2"
+                            >
+                                <Sparkles className="w-4 h-4" /> 
+                                {isExtracting ? 'Extracting AI Data...' : 'Extract Data (AI)'}
+                            </button>
                         </div>
                     </div>
 
@@ -360,6 +414,74 @@ function App() {
                 <AnimatePresence mode="wait">
                     {activeTab === 'calculator' ? (
                         <motion.div key="calc" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-10">
+
+                            {/* AI EXTRACTED CARDS */}
+                            {extractedData && (
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-3xl">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">IT Spend / Budget</h4>
+                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${extractedData.it_spend?.value ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                                                {extractedData.it_spend?.value ? 'Disclosed' : 'Not Disclosed'}
+                                            </span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white tracking-tighter mb-1">
+                                            {extractedData.it_spend?.value ? formatCurrency(extractedData.it_spend.value, currency) : 'Not publicly disclosed'}
+                                        </div>
+                                        {extractedData.it_spend?.value && <div className="text-[11px] font-bold text-zinc-500 mb-4">FY2026</div>}
+                                        <div className="pt-4 border-t border-white/5">
+                                            {extractedData.it_spend?.sourceType !== 'N/A' && (
+                                                <div className="text-[11px] font-bold text-blue-400 mb-2">Source: {extractedData.it_spend?.sourceType}</div>
+                                            )}
+                                            <p className="text-sm text-zinc-400 leading-relaxed">
+                                                {extractedData.it_spend?.context}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-3xl">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">R&D Spend / Budget</h4>
+                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${extractedData.rd_spend?.value ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                                                {extractedData.rd_spend?.value ? 'Disclosed' : 'Not Disclosed'}
+                                            </span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white tracking-tighter mb-1">
+                                            {extractedData.rd_spend?.value ? formatCurrency(extractedData.rd_spend.value, currency) : 'Not publicly disclosed'}
+                                        </div>
+                                        {extractedData.rd_spend?.value && <div className="text-[11px] font-bold text-zinc-500 mb-4">FY2026</div>}
+                                        <div className="pt-4 border-t border-white/5">
+                                            {extractedData.rd_spend?.sourceType !== 'N/A' && (
+                                                <div className="text-[11px] font-bold text-blue-400 mb-2">Source: {extractedData.rd_spend?.sourceType}</div>
+                                            )}
+                                            <p className="text-sm text-zinc-400 leading-relaxed">
+                                                {extractedData.rd_spend?.context}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 shadow-2xl relative overflow-hidden backdrop-blur-3xl">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">AI Spend / Budget</h4>
+                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${extractedData.ai_spend?.value ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'}`}>
+                                                {extractedData.ai_spend?.value ? 'Disclosed' : 'Not Disclosed'}
+                                            </span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white tracking-tighter mb-1">
+                                            {extractedData.ai_spend?.value ? formatCurrency(extractedData.ai_spend.value, currency) : 'Not publicly disclosed'}
+                                        </div>
+                                        {extractedData.ai_spend?.value && <div className="text-[11px] font-bold text-zinc-500 mb-4">Annual (stated in 2025/2026)</div>}
+                                        <div className="pt-4 border-t border-white/5">
+                                            {extractedData.ai_spend?.sourceType !== 'N/A' && (
+                                                <div className="text-[11px] font-bold text-blue-400 mb-2">Source: {extractedData.ai_spend?.sourceType}</div>
+                                            )}
+                                            <p className="text-sm text-zinc-400 leading-relaxed">
+                                                {extractedData.ai_spend?.context}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* SIDE-BY-SIDE COMBINATION CHARTS */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
